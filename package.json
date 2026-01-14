@@ -1,0 +1,15 @@
+{
+  "name": "mini-game-pose-challenge",
+  "version": "1.0.0",
+  "description": "Trang web mini game làm theo hình ảnh: upload/link ảnh, tạo đội chơi, cài âm thanh và chơi trực tiếp trên trình duyệt.",
+  "scripts": {
+    "start": "npx --yes serve ."
+  },
+  "keywords": [
+    "mini-game",
+    "pose",
+    "browser"
+  ],
+  "license": "MIT"
+}
+
