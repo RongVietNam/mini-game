@@ -46,7 +46,7 @@
                     id="image-url-input"
                     placeholder="https://..."
                   />
-                  <button id="add-image-url-btn" type="button">Thêm</button>
+                  <button id="add-image-url-btn" type="button" class="btn-primary">Thêm</button>
                 </div>
               </div>
             </div>
@@ -66,7 +66,7 @@
                   id="team-name-input"
                   placeholder="Nhập tên đội..."
                 />
-                <button id="add-team-btn" type="button">Thêm đội</button>
+                <button id="add-team-btn" type="button" class="btn-primary">Thêm đội</button>
               </div>
             </div>
             <p class="hint">
@@ -87,7 +87,7 @@
                 />
               </div>
               <div class="field-group">
-                <label for="audio-url-input">Hoặc link âm thanh</label>
+                <label for="audio-url-input">Hoặc link âm thanh (Youtube/MP3)</label>
                 <input
                   type="url"
                   id="audio-url-input"
@@ -105,7 +105,7 @@
             <div class="config-row">
               <div class="field-group">
                 <label for="bg-color-input">Màu nền</label>
-                <input type="color" id="bg-color-input" value="#111827" />
+                <input type="color" id="bg-color-input" value="#f8f9fa" />
                 <p class="hint">Chọn màu nền nhanh (ưu tiên nếu không dùng ảnh).</p>
               </div>
               <div class="field-group">
@@ -213,15 +213,44 @@
       <div id="fullscreen-timer">0</div>
     </div>
 
-    <!-- Toàn màn hình chấm điểm -->
+    <!-- Toàn màn hình chấm điểm (Layout 3 cột) -->
     <div id="fullscreen-score" class="fullscreen-score-overlay hidden">
-      <div class="fullscreen-score-content">
-        <h2 class="fullscreen-score-title">Chọn đội làm giống hình nhất</h2>
-        <div id="fullscreen-score-team-list" class="fullscreen-score-team-list"></div>
-        <div class="fullscreen-score-actions">
-          <button id="fullscreen-confirm-score-btn" type="button" class="btn-primary btn-large">
-            Xác nhận điểm & Lượt tiếp theo
-          </button>
+      <!-- Cột Trái: Chấm điểm -->
+      <div class="fs-col fs-left">
+        <div class="fs-panel">
+          <h2 class="fs-title">Chấm điểm</h2>
+          <div id="fullscreen-score-team-list" class="fullscreen-score-team-list"></div>
+          <div class="fullscreen-score-actions-group">
+            <button id="fullscreen-confirm-score-btn" type="button" class="btn-primary btn-large">
+              Xác nhận & Tiếp tục
+            </button>
+            <button id="fullscreen-end-game-btn" type="button" class="btn-secondary btn-large">
+              Kết thúc game
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cột Giữa: Ảnh -->
+      <div class="fs-col fs-center">
+        <img id="scoring-image" src="" alt="Ảnh mẫu" />
+      </div>
+
+      <!-- Cột Phải: Bảng xếp hạng -->
+      <div class="fs-col fs-right">
+        <div class="fs-panel">
+          <h2 class="fs-title">Xếp hạng</h2>
+          <div class="fs-scoreboard-container">
+            <table class="fs-live-table">
+              <thead>
+                <tr>
+                  <th>Đội</th>
+                  <th>Điểm</th>
+                </tr>
+              </thead>
+              <tbody id="fs-live-scoreboard-body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -266,7 +295,12 @@
       </div>
     </div>
 
+    <!-- Youtube Player Container (Hidden) -->
+    <div id="youtube-player-container" style="position: absolute; top: -9999px; left: -9999px; visibility: hidden;">
+      <div id="youtube-player"></div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script src="./script.js"></script>
   </body>
   </html>
-

@@ -25,6 +25,43 @@
 
   /** @type {HTMLAudioElement | null} */
   let audioElement = null;
+  /** @type {any} */
+  let youtubePlayer = null;
+  let isYoutubeReady = false;
+  let currentAudioType = 'none'; // 'file', 'url', 'youtube', 'none'
+
+  // Global callback for Youtube API
+  window.onYouTubeIframeAPIReady = function() {
+    youtubePlayer = new YT.Player('youtube-player', {
+      height: '0',
+      width: '0',
+      videoId: '',
+      playerVars: {
+        'playsinline': 1,
+        'controls': 0,
+        'disablekb': 1,
+        'fs': 0
+      },
+      events: {
+        'onReady': onPlayerReady,
+        'onStateChange': onPlayerStateChange
+      }
+    });
+  };
+
+  function onPlayerReady(event) {
+    isYoutubeReady = true;
+  }
+
+  function onPlayerStateChange(event) {
+    // Handle state changes if needed
+  }
+
+  function extractYoutubeVideoId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  }
 
   const el = {
     imageFileInput: document.getElementById("image-file-input"),
@@ -72,6 +109,9 @@
     fullscreenScore: document.getElementById("fullscreen-score"),
     fullscreenScoreTeamList: document.getElementById("fullscreen-score-team-list"),
     fullscreenConfirmScoreBtn: document.getElementById("fullscreen-confirm-score-btn"),
+    fullscreenEndGameBtn: document.getElementById("fullscreen-end-game-btn"),
+    scoringImage: document.getElementById("scoring-image"),
+    fsLiveScoreboardBody: document.getElementById("fs-live-scoreboard-body"),
 
     fullscreenScoreboard: document.getElementById("fullscreen-scoreboard"),
     fullscreenScoreboardBody: document.getElementById("fullscreen-scoreboard-body"),
@@ -185,6 +225,22 @@
     });
   }
 
+  function updateLiveScoreboardUI() {
+    if (!el.fsLiveScoreboardBody) return;
+    const sorted = [...teams].sort((a, b) => b.score - a.score);
+    el.fsLiveScoreboardBody.innerHTML = "";
+    sorted.forEach((team) => {
+      const tr = document.createElement("tr");
+      const nameTd = document.createElement("td");
+      nameTd.textContent = team.name;
+      const scoreTd = document.createElement("td");
+      scoreTd.textContent = String(team.score);
+      tr.appendChild(nameTd);
+      tr.appendChild(scoreTd);
+      el.fsLiveScoreboardBody.appendChild(tr);
+    });
+  }
+
   function showFullscreenScoreboard() {
     updateFullscreenScoreboardUI();
     if (el.fullscreenScoreboard) {
@@ -252,31 +308,64 @@
   }
 
   function stopAudio() {
-    if (audioElement) {
+    if (currentAudioType === 'youtube' && youtubePlayer && isYoutubeReady) {
+      youtubePlayer.pauseVideo();
+    } else if (audioElement) {
       audioElement.pause();
       audioElement.currentTime = 0;
     }
   }
 
   function setupAudioFromInputs() {
+    // Reset current audio
     if (audioElement) {
       audioElement.pause();
       audioElement = null;
     }
+    if (youtubePlayer && isYoutubeReady) {
+      youtubePlayer.stopVideo();
+    }
+    currentAudioType = 'none';
 
     const file = el.audioFileInput.files && el.audioFileInput.files[0];
     const urlValue = el.audioUrlInput.value.trim();
 
+    // Check for Youtube URL first
+    const youtubeId = extractYoutubeVideoId(urlValue);
+    if (youtubeId) {
+      currentAudioType = 'youtube';
+      if (youtubePlayer && isYoutubeReady) {
+        youtubePlayer.loadVideoById(youtubeId);
+        youtubePlayer.stopVideo(); // Don't play yet
+      }
+      return;
+    }
+
+    // Handle normal audio file or URL
     let src = null;
     if (file) {
       src = URL.createObjectURL(file);
+      currentAudioType = 'file';
     } else if (urlValue) {
       src = urlValue;
+      currentAudioType = 'url';
     }
 
     if (src) {
       audioElement = new Audio(src);
       audioElement.loop = true;
+    }
+  }
+
+  async function playAudio() {
+    if (currentAudioType === 'youtube' && youtubePlayer && isYoutubeReady) {
+      youtubePlayer.playVideo();
+    } else if (audioElement) {
+      try {
+        await audioElement.play();
+      } catch (err) {
+        console.warn("Không thể phát âm thanh tự động:", err);
+      }
     }
   }
 
@@ -299,8 +388,8 @@
     } else if (state.type === "image" && state.imageUrl) {
       body.classList.add("has-custom-bg");
       // layer màu tối lên trên để chữ dễ đọc
-      body.style.backgroundImage = `linear-gradient(rgba(2,6,23,0.55), rgba(2,6,23,0.85)), url('${state.imageUrl}')`;
-      body.style.backgroundColor = "#0b1220";
+      body.style.backgroundImage = `linear-gradient(rgba(255,255,255,0.55), rgba(255,255,255,0.85)), url('${state.imageUrl}')`;
+      body.style.backgroundColor = "#f8f9fa";
     } else {
       // default: để CSS gốc quyết định
       body.style.backgroundImage = "";
@@ -411,23 +500,25 @@
     }
     if (el.fullscreenScore) el.fullscreenScore.classList.add("hidden");
 
-    if (audioElement) {
-      try {
-        await audioElement.play();
-      } catch (err) {
-        console.warn("Không thể phát âm thanh tự động:", err);
-      }
-    }
+    playAudio();
 
+    // Thay đổi ảnh mượt mà hơn
     randomImageIntervalId = setInterval(() => {
       const img = images[Math.floor(Math.random() * images.length)];
       if (!img) return;
       if (el.fullscreenImage) {
-        el.fullscreenImage.src = img.url;
-        el.fullscreenImage.alt = img.name || "Ảnh random";
-        setupImageErrorHandler(el.fullscreenImage);
+        // Thêm class fade-out để bắt đầu hiệu ứng mờ dần
+        el.fullscreenImage.classList.add('fade-out');
+        
+        // Đợi một chút để hiệu ứng fade-out diễn ra, sau đó đổi ảnh và fade-in
+        setTimeout(() => {
+            el.fullscreenImage.src = img.url;
+            el.fullscreenImage.alt = img.name || "Ảnh random";
+            setupImageErrorHandler(el.fullscreenImage);
+            el.fullscreenImage.classList.remove('fade-out');
+        }, 75); // Thời gian này nên bằng 1/2 khoảng thời gian interval hoặc ngắn hơn transition CSS
       }
-    }, 120);
+    }, 150); // Tăng thời gian interval lên một chút để mắt kịp nhìn thấy hiệu ứng
 
     countdownIntervalId = setInterval(() => {
       currentCountdownSeconds -= 1;
@@ -467,6 +558,7 @@
     }
 
     if (el.fullscreenImage) {
+      el.fullscreenImage.classList.remove('fade-out'); // Đảm bảo ảnh cuối cùng hiển thị rõ
       el.fullscreenImage.src = selected.url;
       el.fullscreenImage.alt = selected.name || "Ảnh được chọn toàn màn hình";
       setupImageErrorHandler(el.fullscreenImage);
@@ -500,16 +592,16 @@
       if (el.fullscreenTimer) {
         el.fullscreenTimer.textContent = "0";
       }
-      beginScoringForImage(selected.id);
+      beginScoringForImage(selected);
     }, displaySeconds * 1000);
   }
 
-  function beginScoringForImage(imageId) {
+  function beginScoringForImage(selectedImage) {
     setGameState("scoring");
     el.startRoundBtn.disabled = true;
     if (el.fullscreenStopBtn) el.fullscreenStopBtn.disabled = true;
 
-    // Ẩn màn hình hiển thị ảnh fullscreen
+    // Ẩn màn hình hiển thị ảnh fullscreen cũ
     if (el.fullscreenDisplay) {
       el.fullscreenDisplay.classList.add("hidden");
     }
@@ -519,7 +611,13 @@
       el.fullscreenRemainingImages.textContent = String(gameState.remainingImages);
     }
 
-    images = images.filter((img) => img.id !== imageId);
+    // Hiển thị ảnh cần chấm điểm ở giữa
+    if (el.scoringImage) {
+      el.scoringImage.src = selectedImage.url;
+      setupImageErrorHandler(el.scoringImage);
+    }
+
+    images = images.filter((img) => img.id !== selectedImage.id);
     updateImageListUI();
 
     // Tạo danh sách đội cho màn chấm điểm fullscreen
@@ -537,6 +635,9 @@
         el.fullscreenScoreTeamList.appendChild(pill);
       });
     }
+
+    // Cập nhật bảng xếp hạng live
+    updateLiveScoreboardUI();
 
     // Hiển thị màn chấm điểm fullscreen
     if (el.fullscreenScore) {
@@ -569,9 +670,14 @@
 
     updateTeamListUI();
 
-    // Ẩn màn chấm điểm fullscreen và về lại giao diện chơi game
+    // Ẩn màn chấm điểm fullscreen
     if (el.fullscreenScore) {
       el.fullscreenScore.classList.add("hidden");
+    }
+    
+    // Ẩn màn hình hiển thị ảnh (vì đã xong lượt này)
+    if (el.fullscreenDisplay) {
+      el.fullscreenDisplay.classList.add("hidden");
     }
 
     if (images.length === 0) {
@@ -583,14 +689,8 @@
       return;
     }
 
-    // Nếu còn ảnh: hiển thị màn hình chọn hành động tiếp theo
-    if (el.nextRoundChoice) {
-      el.nextRoundChoice.classList.remove("hidden");
-    }
-    if (el.remainingImagesChoice) {
-      el.remainingImagesChoice.textContent = String(images.length);
-    }
-    setGameState("idle");
+    // TỰ ĐỘNG CHUYỂN SANG LƯỢT TIẾP THEO (BỎ QUA MODAL CHỌN)
+    startRound();
   }
 
   function stopRoundEarly() {
@@ -779,6 +879,24 @@
       });
     }
 
+    if (el.fullscreenEndGameBtn) {
+      el.fullscreenEndGameBtn.addEventListener("click", () => {
+        // Ẩn màn chấm điểm fullscreen
+        if (el.fullscreenScore) {
+          el.fullscreenScore.classList.add("hidden");
+        }
+        // Ẩn màn hình hiển thị ảnh
+        if (el.fullscreenDisplay) {
+          el.fullscreenDisplay.classList.add("hidden");
+        }
+        
+        setGameState("idle");
+        el.startRoundBtn.disabled = true;
+        if (el.fullscreenStopBtn) el.fullscreenStopBtn.disabled = true;
+        showFullscreenScoreboard();
+      });
+    }
+
     el.resetGameBtn.addEventListener("click", () => {
       fullResetGame();
     });
@@ -846,4 +964,3 @@
 
   document.addEventListener("DOMContentLoaded", init);
 })();
-
