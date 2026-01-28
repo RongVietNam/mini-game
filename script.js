@@ -21,6 +21,7 @@
   let randomImageIntervalId = null;
   let displayPhaseTimeoutId = null;
   let countdownIntervalId = null;
+  let randomImageTimeoutId = null;
   let currentCountdownSeconds = 0;
 
   /** @type {HTMLAudioElement | null} */
@@ -296,7 +297,7 @@
   }
 
   function clearAllTimers() {
-    [randomPhaseTimeoutId, randomImageIntervalId, displayPhaseTimeoutId, countdownIntervalId].forEach(
+    [randomPhaseTimeoutId, randomImageIntervalId, displayPhaseTimeoutId, countdownIntervalId, randomImageTimeoutId].forEach(
       (id) => {
         if (id != null) clearTimeout(id);
       }
@@ -305,6 +306,7 @@
     randomImageIntervalId = null;
     displayPhaseTimeoutId = null;
     countdownIntervalId = null;
+    randomImageTimeoutId = null;
   }
 
   function stopAudio() {
@@ -511,7 +513,7 @@
         el.fullscreenImage.classList.add('fade-out');
         
         // Đợi một chút để hiệu ứng fade-out diễn ra, sau đó đổi ảnh và fade-in
-        setTimeout(() => {
+        randomImageTimeoutId = setTimeout(() => {
             el.fullscreenImage.src = img.url;
             el.fullscreenImage.alt = img.name || "Ảnh random";
             setupImageErrorHandler(el.fullscreenImage);
@@ -537,6 +539,10 @@
     if (randomImageIntervalId != null) {
       clearInterval(randomImageIntervalId);
       randomImageIntervalId = null;
+    }
+    if (randomImageTimeoutId != null) {
+      clearTimeout(randomImageTimeoutId);
+      randomImageTimeoutId = null;
     }
     if (randomPhaseTimeoutId != null) {
       clearTimeout(randomPhaseTimeoutId);
