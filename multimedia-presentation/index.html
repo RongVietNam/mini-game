@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình chiếu Đa phương tiện</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- SortableJS for drag and drop (Sidebar only) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar: Step List -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Danh sách Step</h2>
+                <button id="add-step-btn" class="btn-primary">+ Thêm Step</button>
+            </div>
+            <div id="step-list" class="step-list">
+                <!-- Steps will be injected here -->
+            </div>
+            <div class="sidebar-footer">
+                <button id="manage-resources-btn" class="btn-dashed" style="margin-bottom: 0.5rem;">📁 Quản lý Tài nguyên</button>
+                <div class="data-actions">
+                    <button id="export-btn" class="btn-secondary btn-sm">⬇ Export JSON</button>
+                    <button id="import-btn" class="btn-secondary btn-sm">⬆ Import JSON</button>
+                    <input type="file" id="import-file-input" accept=".json" style="display: none;">
+                </div>
+                <button id="present-btn" class="btn-success">▶ Trình chiếu</button>
+                <button id="back-home-btn" class="btn-secondary">🏠 Về trang chủ</button>
+            </div>
+        </aside>
+
+        <!-- Main Content: Step Editor -->
+        <main class="editor-area" id="editor-area">
+            <div class="editor-header">
+                <div class="step-title-edit">
+                    <label>Tên Step:</label>
+                    <input type="text" id="step-name-input" placeholder="Nhập tên step...">
+                </div>
+                <div class="step-audio-config">
+                    <label>Âm thanh nền:</label>
+                    <span id="step-audio-name" class="resource-name">Chưa có</span>
+                    <button id="select-step-audio-btn" class="btn-secondary btn-sm">Chọn</button>
+                    <button id="remove-audio-btn" class="btn-icon hidden" title="Xóa audio">✕</button>
+                    <audio id="audio-preview" controls style="display: none; height: 30px; margin-left: 5px;"></audio>
+                </div>
+                <div class="step-actions">
+                    <button id="copy-step-btn" class="btn-secondary" title="Nhân bản Step này">Copy</button>
+                    <button id="delete-step-btn" class="btn-danger" title="Xóa Step này">Xóa</button>
+                </div>
+            </div>
+
+            <div class="frames-wrapper">
+                <div id="frames-canvas" class="frames-canvas">
+                    <!-- Frames will be injected here as absolute positioned elements -->
+                </div>
+
+                <div class="canvas-toolbar">
+                    <button id="add-frame-btn" class="btn-primary">+ Thêm khung hình</button>
+                    <button id="fullscreen-frame-btn" class="btn-secondary">Thêm khung Toàn màn hình</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Resource Manager -->
+    <div id="resource-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Quản lý Tài nguyên</h3>
+                <button class="close-modal-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="resource-toolbar">
+                    <input type="file" id="add-resource-input" multiple style="display: none;">
+                    <button id="add-resource-btn" class="btn-primary">Upload File Mới</button>
+                    <p class="hint">Hỗ trợ: Ảnh, Video, MP3</p>
+                </div>
+                <div id="resource-list" class="resource-list">
+                    <!-- Resource items -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="close-modal-btn btn-secondary">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Resource Selector (Picker) -->
+    <div id="resource-picker-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Chọn Tài nguyên</h3>
+                <button class="close-picker-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="picker-list" class="resource-list">
+                    <!-- Items to pick -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Import Missing Resources -->
+    <div id="import-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Khôi phục Tài nguyên</h3>
+                <p>Vui lòng upload lại các file tương ứng để khôi phục dữ liệu.</p>
+            </div>
+            <div class="modal-body">
+                <div class="import-toolbar" style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #eee;">
+                    <button id="auto-match-btn" class="btn-primary" style="width: 100%;">📂 Chọn nhiều file để tự động khớp</button>
+                    <input type="file" id="auto-match-input" multiple style="display: none;">
+                    <p class="hint" style="margin-top: 5px; font-size: 0.85rem;">Chọn tất cả ảnh/video/nhạc cùng lúc. Hệ thống sẽ tự điền nếu trùng tên file.</p>
+                </div>
+                <div id="missing-resource-list" class="missing-list">
+                    <!-- Missing items -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="finish-import-btn" class="btn-success">Hoàn tất</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template for a Frame Card -->
+    <template id="frame-template">
+        <div class="frame-card">
+            <div class="frame-header">
+                <span class="frame-title">Khung #</span>
+                <div class="z-controls">
+                    <button class="z-btn z-up" title="Lên 1 lớp">▲</button>
+                    <button class="z-btn z-down" title="Xuống 1 lớp">▼</button>
+                    <button class="z-btn z-top" title="Lên trên cùng">⇪</button>
+                    <button class="z-btn z-bottom" title="Xuống dưới cùng">⇩</button>
+                </div>
+                <button class="frame-delete-btn btn-icon">✕</button>
+            </div>
+            <div class="frame-content">
+                <div class="upload-placeholder">
+                    <span>Chọn từ Thư viện</span>
+                    <button class="btn-secondary btn-sm select-resource-btn">Chọn File</button>
+                </div>
+                <div class="media-preview hidden">
+                    <!-- img or video element -->
+                </div>
+            </div>
+            <div class="frame-settings">
+                <label class="checkbox-label">
+                    <input type="checkbox" class="frame-loop-checkbox"> Loop
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="frame-autoplay-checkbox" checked> Auto
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="frame-cover-checkbox"> Fill
+                </label>
+            </div>
+            <div class="resize-handle"></div>
+        </div>
+    </template>
+
+    <script src="script.js"></script>
+</body>
+</html>

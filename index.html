@@ -2,305 +2,110 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <title>Mini Game Pose Challenge</title>
+    <title>Danh sách Mini Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="./styles.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: #f8f9fa;
+        color: #212529;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        padding: 2rem;
+      }
+
+      h1 {
+        margin-bottom: 2rem;
+        color: #343a40;
+      }
+
+      .game-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        width: 100%;
+        max-width: 1000px;
+      }
+
+      .game-card {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        border-color: #ced4da;
+      }
+
+      .game-thumbnail {
+        height: 160px;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #adb5bd;
+      }
+
+      .game-info {
+        padding: 1.25rem;
+      }
+
+      .game-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem;
+        color: #0d6efd;
+      }
+
+      .game-description {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin: 0;
+        line-height: 1.5;
+      }
+    </style>
   </head>
   <body>
-    <div class="app">
-      <header class="app-header">
-        <div class="app-header-row">
-          <h1>Mini Game - Làm theo hình ảnh</h1>
-          <div class="header-actions">
-            <button id="start-round-btn" type="button" class="btn-primary">
-              Start
-            </button>
-            <button id="toggle-config-btn" type="button" class="btn-secondary">
-              Ẩn cài đặt
-            </button>
-          </div>
+    <h1>Danh sách Mini Game</h1>
+
+    <div class="game-list">
+      <!-- Game 1: Pose Challenge -->
+      <a href="./pose-challenge/index.html" class="game-card">
+        <div class="game-thumbnail">
+          📷
         </div>
-      </header>
-
-      <main class="app-main">
-        <section class="panel panel-config" id="config-panel">
-          <h2>Cài đặt trò chơi</h2>
-
-          <div class="config-section">
-            <h3>Ảnh (tối đa 50)</h3>
-            <div class="config-row">
-              <div class="field-group">
-                <label for="image-file-input">Upload ảnh</label>
-                <input
-                  type="file"
-                  id="image-file-input"
-                  accept="image/*"
-                  multiple
-                />
-              </div>
-              <div class="field-group">
-                <label for="image-url-input">Thêm link ảnh</label>
-                <div class="inline-input">
-                  <input
-                    type="url"
-                    id="image-url-input"
-                    placeholder="https://..."
-                  />
-                  <button id="add-image-url-btn" type="button" class="btn-primary">Thêm</button>
-                </div>
-              </div>
-            </div>
-            <p class="hint">
-              Tổng số ảnh hiện tại: <span id="image-count">0</span> / 50
-            </p>
-            <div id="image-list" class="pill-list"></div>
-          </div>
-
-          <div class="config-section">
-            <h3>Đội chơi (tối đa 10)</h3>
-            <div class="field-group">
-              <label for="team-name-input">Tên đội</label>
-              <div class="inline-input">
-                <input
-                  type="text"
-                  id="team-name-input"
-                  placeholder="Nhập tên đội..."
-                />
-                <button id="add-team-btn" type="button" class="btn-primary">Thêm đội</button>
-              </div>
-            </div>
-            <p class="hint">
-              Số đội hiện tại: <span id="team-count">0</span> / 10
-            </p>
-            <div id="team-list" class="pill-list"></div>
-          </div>
-
-          <div class="config-section">
-            <h3>Âm thanh</h3>
-            <div class="config-row">
-              <div class="field-group">
-                <label for="audio-file-input">Upload file âm thanh</label>
-                <input
-                  type="file"
-                  id="audio-file-input"
-                  accept="audio/*"
-                />
-              </div>
-              <div class="field-group">
-                <label for="audio-url-input">Hoặc link âm thanh (Youtube/MP3)</label>
-                <input
-                  type="url"
-                  id="audio-url-input"
-                  placeholder="https://..."
-                />
-              </div>
-            </div>
-            <p class="hint">
-              Âm thanh sẽ phát trong lúc random ảnh (nếu được cài đặt).
-            </p>
-          </div>
-
-          <div class="config-section">
-            <h3>Background</h3>
-            <div class="config-row">
-              <div class="field-group">
-                <label for="bg-color-input">Màu nền</label>
-                <input type="color" id="bg-color-input" value="#f8f9fa" />
-                <p class="hint">Chọn màu nền nhanh (ưu tiên nếu không dùng ảnh).</p>
-              </div>
-              <div class="field-group">
-                <label for="bg-file-input">Ảnh nền (upload)</label>
-                <input type="file" id="bg-file-input" accept="image/*" />
-              </div>
-              <div class="field-group">
-                <label for="bg-url-input">Ảnh nền (link)</label>
-                <input type="url" id="bg-url-input" placeholder="https://..." />
-              </div>
-            </div>
-            <div class="config-actions">
-              <button id="apply-bg-btn" type="button" class="btn-primary">
-                Áp dụng
-              </button>
-              <button id="clear-bg-btn" type="button" class="btn-secondary">
-                Xóa nền
-              </button>
-            </div>
-            <p class="hint">
-              Tip: Upload ảnh sẽ tự xoá link, và ngược lại. Background sẽ được lưu lại trên trình duyệt.
-            </p>
-          </div>
-
-          <div class="config-section config-grid">
-            <div class="field-group">
-              <label for="display-duration-input"
-                >Thời gian hiển thị ảnh để tạo dáng (giây)</label
-              >
-              <input
-                type="number"
-                id="display-duration-input"
-                min="3"
-                max="120"
-                value="10"
-              />
-            </div>
-            <div class="field-group">
-              <label>Thời gian random ảnh (giây)</label>
-              <div class="inline-input">
-                <input
-                  type="number"
-                  id="random-min-input"
-                  min="5"
-                  max="300"
-                  value="15"
-                />
-                <span>đến</span>
-                <input
-                  type="number"
-                  id="random-max-input"
-                  min="5"
-                  max="300"
-                  value="50"
-                />
-              </div>
-              <p class="hint">Hệ thống sẽ chọn ngẫu nhiên trong khoảng này.</p>
-            </div>
-          </div>
-
-          <div class="config-actions">
-            <button id="reset-game-btn" type="button" class="btn-secondary">
-              Reset trò chơi
-            </button>
-          </div>
-        </section>
-
-        <section class="panel panel-scoreboard">
-          <h2>Bảng điểm</h2>
-          <table class="score-table">
-            <thead>
-              <tr>
-                <th>Đội</th>
-                <th>Điểm</th>
-              </tr>
-            </thead>
-            <tbody id="scoreboard-body"></tbody>
-          </table>
-        </section>
-      </main>
-
-      <footer class="app-footer">
-        <span>Mini game làm theo hình ảnh - Tùy chỉnh hoàn toàn trên trình duyệt</span>
-      </footer>
-    </div>
-
-    <!-- Toàn màn hình hiển thị ảnh + đồng hồ đếm lớn -->
-    <div id="fullscreen-display" class="fullscreen-overlay hidden">
-      <div class="fullscreen-topbar">
-        <div class="fullscreen-meta">
-          <div>
-            Trạng thái:
-            <strong><span id="fullscreen-state-label">Chưa bắt đầu</span></strong>
-          </div>
-          <div>
-            Ảnh còn lại:
-            <strong><span id="fullscreen-remaining-images">0</span></strong>
-          </div>
+        <div class="game-info">
+          <h3 class="game-title">Pose Challenge</h3>
+          <p class="game-description">
+            Trò chơi làm theo hình ảnh mẫu. Random ảnh, đếm ngược và chấm điểm cho các đội chơi.
+          </p>
         </div>
-        <button id="fullscreen-stop-btn" type="button" class="btn-danger" disabled>
-          Dừng sớm
-        </button>
-      </div>
-      <img id="fullscreen-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Crect fill='%23f0f0f0' width='800' height='600'/%3E%3Ctext fill='%23999' font-family='Arial, sans-serif' font-size='48' x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle'%3EChưa có ảnh%3C/text%3E%3C/svg%3E" alt="Ảnh toàn màn hình" />
-      <div id="fullscreen-timer">0</div>
-    </div>
+      </a>
 
-    <!-- Toàn màn hình chấm điểm (Layout 3 cột) -->
-    <div id="fullscreen-score" class="fullscreen-score-overlay hidden">
-      <!-- Cột Trái: Chấm điểm -->
-      <div class="fs-col fs-left">
-        <div class="fs-panel">
-          <h2 class="fs-title">Chấm điểm</h2>
-          <div id="fullscreen-score-team-list" class="fullscreen-score-team-list"></div>
-          <div class="fullscreen-score-actions-group">
-            <button id="fullscreen-confirm-score-btn" type="button" class="btn-primary btn-large">
-              Xác nhận & Tiếp tục
-            </button>
-            <button id="fullscreen-end-game-btn" type="button" class="btn-secondary btn-large">
-              Kết thúc game
-            </button>
-          </div>
+      <!-- Game 2: Multimedia Presentation -->
+      <a href="./multimedia-presentation/index.html" class="game-card">
+        <div class="game-thumbnail">
+          🎬
         </div>
-      </div>
-
-      <!-- Cột Giữa: Ảnh -->
-      <div class="fs-col fs-center">
-        <img id="scoring-image" src="" alt="Ảnh mẫu" />
-      </div>
-
-      <!-- Cột Phải: Bảng xếp hạng -->
-      <div class="fs-col fs-right">
-        <div class="fs-panel">
-          <h2 class="fs-title">Xếp hạng</h2>
-          <div class="fs-scoreboard-container">
-            <table class="fs-live-table">
-              <thead>
-                <tr>
-                  <th>Đội</th>
-                  <th>Điểm</th>
-                </tr>
-              </thead>
-              <tbody id="fs-live-scoreboard-body"></tbody>
-            </table>
-          </div>
+        <div class="game-info">
+          <h3 class="game-title">Trình chiếu Đa phương tiện</h3>
+          <p class="game-description">
+            Tạo các bước trình chiếu với hình ảnh, video và âm thanh. Hỗ trợ 2 màn hình (Điều khiển & Trình chiếu).
+          </p>
         </div>
-      </div>
+      </a>
     </div>
-
-    <!-- Màn hình chọn sau khi chấm điểm (nếu còn ảnh) -->
-    <div id="next-round-choice" class="fullscreen-choice-overlay hidden">
-      <div class="fullscreen-choice-content">
-        <h2 class="fullscreen-choice-title">Chọn hành động tiếp theo</h2>
-        <p class="fullscreen-choice-hint">Vẫn còn <strong id="remaining-images-choice">0</strong> ảnh để chơi</p>
-        <div class="fullscreen-choice-actions">
-          <button id="continue-next-round-btn" type="button" class="btn-primary btn-large">
-            Lượt tiếp theo
-          </button>
-          <button id="end-game-now-btn" type="button" class="btn-secondary btn-large">
-            Kết thúc game
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Toàn màn hình bảng điểm (khi kết thúc game) -->
-    <div id="fullscreen-scoreboard" class="fullscreen-scoreboard-overlay hidden">
-      <div class="fullscreen-scoreboard-content">
-        <h2 class="fullscreen-scoreboard-title">Kết quả</h2>
-        <table class="fullscreen-scoreboard-table">
-          <thead>
-            <tr>
-              <th>Đội</th>
-              <th>Điểm</th>
-            </tr>
-          </thead>
-          <tbody id="fullscreen-scoreboard-body"></tbody>
-        </table>
-        <div class="fullscreen-scoreboard-actions">
-          <button id="close-fullscreen-scoreboard-btn" type="button" class="btn-secondary btn-large">
-            Đóng
-          </button>
-          <button id="reset-after-finish-btn" type="button" class="btn-primary btn-large">
-            Chơi lại (Reset vòng)
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Youtube Player Container (Hidden) -->
-    <div id="youtube-player-container" style="position: absolute; top: -9999px; left: -9999px; visibility: hidden;">
-      <div id="youtube-player"></div>
-    </div>
-
-    <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="./script.js"></script>
   </body>
-  </html>
+</html>
