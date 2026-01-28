@@ -95,17 +95,17 @@
     }
 
     function loadData(rawSteps) {
-        // Recreate Blob URLs from File objects
+        // Recreate Blob URLs from File objects, keep Web URLs as is
         steps = rawSteps.map(step => ({
             ...step,
-            audioUrl: step.audioFile ? URL.createObjectURL(step.audioFile) : null,
+            audioUrl: step.audioFile ? URL.createObjectURL(step.audioFile) : step.audioUrl,
             frames: step.frames.map(frame => ({
                 ...frame,
-                url: frame.file ? URL.createObjectURL(frame.file) : null
+                url: frame.file ? URL.createObjectURL(frame.file) : frame.url
             }))
         }));
 
-        console.log("Presenter loaded steps with new Blob URLs:", steps);
+        console.log("Presenter loaded steps:", steps);
 
         if (!steps || steps.length === 0) {
             alert("Không có dữ liệu trình chiếu.");
@@ -114,8 +114,6 @@
 
         openAudienceWindow();
         renderSlideList();
-        // Don't updateView yet, wait for audience to be ready?
-        // Actually we can update presenter view, but audience might need a click.
         updateView();
     }
 
@@ -148,6 +146,7 @@
                     .frame { position: absolute; display: flex; align-items: center; justify-content: center; overflow: hidden; }
                     .frame img, .frame video { width: 100%; height: 100%; object-fit: contain; }
                     .frame.fit-cover img, .frame.fit-cover video { object-fit: cover; }
+                    .frame iframe { width: 100%; height: 100%; border: none; pointer-events: auto; }
                     
                     #black-overlay {
                         position: fixed;
@@ -211,7 +210,6 @@
                         // Play silent sound to unlock
                         bgAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
                         bgAudio.play().then(() => {
-                            // If there is a pending step, render it now
                             if (pendingStep) renderStep(pendingStep);
                         }).catch(e => console.log("Unlock failed", e));
                     });
@@ -291,20 +289,19 @@
                                     const video = document.createElement('video');
                                     video.src = frame.url;
                                     if (frame.loop) video.loop = true;
-                                    
-                                    // Explicitly set attributes
                                     if (frame.autoplay) {
                                         video.autoplay = true;
-                                        video.muted = false; // Ensure sound is on
+                                        video.muted = false;
                                         video.dataset.autoplay = 'true';
                                     }
-                                    
                                     div.appendChild(video);
-                                    
-                                    // Force play if autoplay is on
                                     if (frame.autoplay) {
                                         video.play().catch(e => console.log("Video autoplay failed", e));
                                     }
+                                } else if (frame.type === 'web') {
+                                    const iframe = document.createElement('iframe');
+                                    iframe.src = frame.url;
+                                    div.appendChild(iframe);
                                 }
                             }
                             canvas.appendChild(div);
@@ -344,6 +341,14 @@
                     video.src = frame.url;
                     video.muted = true;
                     div.appendChild(video);
+                } else if (frame.type === 'web') {
+                    const iframe = document.createElement('iframe');
+                    iframe.src = frame.url;
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.style.border = 'none';
+                    iframe.style.pointerEvents = 'none'; // Disable interaction in preview
+                    div.appendChild(iframe);
                 }
             } else {
                 div.style.border = '1px dashed #555';
@@ -383,8 +388,6 @@
             }
         });
 
-        // Broadcast using the NEW Blob URLs created in this window context
-        // Note: Audience window is opened by THIS window, so it shares the session.
         console.log("Broadcasting step:", currentStep);
         broadcastChannel.postMessage({
             type: 'SHOW_STEP',

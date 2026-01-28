@@ -39,6 +39,7 @@
         // Resource Manager
         addResourceInput: document.getElementById('add-resource-input'),
         addResourceBtn: document.getElementById('add-resource-btn'),
+        addWebResourceBtn: document.getElementById('add-web-resource-btn'),
         resourceList: document.getElementById('resource-list'),
         
         // Picker
@@ -89,16 +90,29 @@
         return resources.find(r => r.id === id);
     }
 
-    function addResource(file) {
-        const url = URL.createObjectURL(file);
-        const type = file.type.startsWith('video') ? 'video' : (file.type.startsWith('audio') ? 'audio' : 'image');
-        const newRes = {
-            id: generateId(),
-            name: file.name,
-            type: type,
-            url: url,
-            file: file
-        };
+    function addResource(fileOrUrl, type = null, name = null) {
+        let newRes;
+        if (fileOrUrl instanceof File) {
+            const file = fileOrUrl;
+            const url = URL.createObjectURL(file);
+            const fileType = file.type.startsWith('video') ? 'video' : (file.type.startsWith('audio') ? 'audio' : 'image');
+            newRes = {
+                id: generateId(),
+                name: file.name,
+                type: fileType,
+                url: url,
+                file: file
+            };
+        } else {
+            // Web Link
+            newRes = {
+                id: generateId(),
+                name: name || fileOrUrl,
+                type: 'web',
+                url: fileOrUrl,
+                file: null
+            };
+        }
         resources.push(newRes);
         return newRes;
     }
@@ -182,6 +196,7 @@
             if (res.type === 'image') icon = `<img src="${res.url}">`;
             else if (res.type === 'video') icon = '🎬';
             else if (res.type === 'audio') icon = '🎵';
+            else if (res.type === 'web') icon = '🌐';
 
             item.innerHTML = `
                 <div class="res-thumb">${icon}</div>
@@ -228,7 +243,9 @@
             resources: resources.map(r => ({
                 id: r.id,
                 name: r.name,
-                type: r.type
+                type: r.type,
+                // Export URL only if it's a web link
+                url: r.type === 'web' ? r.url : null
             }))
         };
 
@@ -253,7 +270,12 @@
                 if (!data.steps || !data.resources) throw new Error("Invalid format");
                 
                 steps = data.steps;
-                resources = data.resources.map(r => ({ ...r, url: null, file: null }));
+                // Restore resources, keeping web URLs
+                resources = data.resources.map(r => ({ 
+                    ...r, 
+                    url: r.type === 'web' ? r.url : null, 
+                    file: null 
+                }));
 
                 renderMissingResources();
                 el.importModal.classList.remove('hidden');
@@ -268,11 +290,18 @@
 
     function renderMissingResources() {
         el.missingResourceList.innerHTML = '';
-        resources.forEach(res => {
+        
+        // Filter out web resources as they don't need file upload
+        const missingFiles = resources.filter(r => r.type !== 'web');
+        
+        if (missingFiles.length === 0) {
+            el.missingResourceList.innerHTML = '<p class="hint">Tất cả tài nguyên web đã được khôi phục. Nếu có file ảnh/video, vui lòng kiểm tra lại.</p>';
+        }
+
+        missingFiles.forEach(res => {
             const item = document.createElement('div');
             item.className = `missing-item ${res.url ? 'resolved' : ''}`;
             
-            // Status text
             let statusHtml = '';
             if (res.url) {
                 statusHtml = `
@@ -295,7 +324,6 @@
 
             const input = item.querySelector('.resolve-file-input');
             
-            // Handle file selection
             input.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
@@ -305,7 +333,6 @@
                 }
             });
 
-            // Bind buttons to input
             const selectBtn = item.querySelector('.select-file-btn');
             if (selectBtn) selectBtn.addEventListener('click', () => input.click());
 
@@ -319,10 +346,7 @@
     function autoMatchFiles(fileList) {
         let matchCount = 0;
         Array.from(fileList).forEach(file => {
-            // Find resource with matching name (case insensitive?)
-            // Let's do exact match for now, or maybe ignore extension if needed?
-            // Usually export keeps full name.
-            const targetRes = resources.find(r => r.name === file.name && !r.url);
+            const targetRes = resources.find(r => r.name === file.name && !r.url && r.type !== 'web');
             
             if (targetRes) {
                 targetRes.url = URL.createObjectURL(file);
@@ -441,6 +465,14 @@
                     video.src = res.url;
                     video.controls = true;
                     mediaPreview.appendChild(video);
+                } else if (res.type === 'web') {
+                    const iframe = document.createElement('iframe');
+                    iframe.src = res.url;
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.style.border = 'none';
+                    iframe.style.pointerEvents = 'none'; // Disable interaction in editor
+                    mediaPreview.appendChild(iframe);
                 }
             } else {
                 uploadPlaceholder.classList.remove('hidden');
@@ -601,6 +633,14 @@
             e.target.value = '';
         });
 
+        el.addWebResourceBtn.addEventListener('click', () => {
+            const url = prompt("Nhập URL trang web (ví dụ: https://example.com):");
+            if (url) {
+                addResource(url, 'web', url);
+                renderResourceList(el.resourceList, 'manage');
+            }
+        });
+
         document.querySelectorAll('.close-modal-btn').forEach(btn => {
             btn.addEventListener('click', () => el.resourceModal.classList.add('hidden'));
         });
@@ -673,7 +713,11 @@
             frames: step.frames.map(frame => ({
                 ...frame,
                 file: frame.resourceId ? (getResource(frame.resourceId)?.file || null) : null,
-                type: frame.resourceId ? (getResource(frame.resourceId)?.type || null) : null
+                type: frame.resourceId ? (getResource(frame.resourceId)?.type || null) : null,
+                // Pass URL directly for web resources
+                url: (frame.resourceId && getResource(frame.resourceId)?.type === 'web') 
+                     ? getResource(frame.resourceId)?.url 
+                     : null
             }))
         }));
 
@@ -706,7 +750,10 @@
             frames: step.frames.map(frame => ({
                 ...frame,
                 file: frame.resourceId ? (getResource(frame.resourceId)?.file || null) : null,
-                type: frame.resourceId ? (getResource(frame.resourceId)?.type || null) : null
+                type: frame.resourceId ? (getResource(frame.resourceId)?.type || null) : null,
+                url: (frame.resourceId && getResource(frame.resourceId)?.type === 'web') 
+                     ? getResource(frame.resourceId)?.url 
+                     : null
             }))
         }));
 
