@@ -477,18 +477,19 @@ button:disabled {
 }
 
 .fs-left {
-  flex: 0 0 300px; /* Cố định chiều rộng cột trái */
+  flex: 0 0 280px; /* Cố định chiều rộng cột trái */
 }
 
 .fs-center {
-  flex: 1; /* Chiếm phần còn lại */
+  flex: 1 1 auto; /* Chiếm phần còn lại, cho phép co giãn */
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  min-width: 0; /* Ngăn chặn overflow ngoài ý muốn */
 }
 
 .fs-right {
-  flex: 0 0 300px; /* Cố định chiều rộng cột phải */
+  flex: 0 0 280px; /* Cố định chiều rộng cột phải */
 }
 
 .fs-panel {
@@ -516,6 +517,7 @@ button:disabled {
 /* Ảnh ở giữa */
 #scoring-image {
   max-width: 100%;
+  height: 75vh; /* Tương tự ảnh pose */
   max-height: 90vh;
   object-fit: contain;
   border-radius: 0.5rem;
@@ -788,5 +790,6 @@ button:disabled {
     max-height: 100%;
     width: 100%;
     object-fit: contain;
+    height: auto;
   }
 }
