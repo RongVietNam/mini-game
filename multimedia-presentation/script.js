@@ -24,6 +24,7 @@
         selectStepAudioBtn: document.getElementById('select-step-audio-btn'),
         audioPreview: document.getElementById('audio-preview'),
         removeAudioBtn: document.getElementById('remove-audio-btn'),
+        stepAudioLoopCheckbox: document.getElementById('step-audio-loop-checkbox'),
         deleteStepBtn: document.getElementById('delete-step-btn'),
         copyStepBtn: document.getElementById('copy-step-btn'),
         
@@ -40,7 +41,9 @@
         addResourceInput: document.getElementById('add-resource-input'),
         addResourceBtn: document.getElementById('add-resource-btn'),
         addWebResourceBtn: document.getElementById('add-web-resource-btn'),
-        resourceList: document.getElementById('resource-list'),
+        resourceList: document.getElementById('resource-list'), // Sidebar list
+        resourceListFull: document.getElementById('resource-list-full'), // Modal list
+        resourceSection: document.querySelector('.resources-section'),
         
         // Picker
         pickerList: document.getElementById('picker-list'),
@@ -61,8 +64,9 @@
         selectStep(steps[0].id);
 
         new Sortable(el.stepList, {
-            handle: '.step-handle',
+            handle: '.step-handle', // Drag handle
             animation: 150,
+            direction: 'horizontal', // Hint for horizontal list
             onEnd: (evt) => {
                 const item = steps.splice(evt.oldIndex, 1)[0];
                 steps.splice(evt.newIndex, 0, item);
@@ -70,6 +74,7 @@
         });
 
         bindEvents();
+        bindDragAndDropEvents();
         
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
@@ -114,6 +119,7 @@
             };
         }
         resources.push(newRes);
+        updateResourceLists();
         return newRes;
     }
 
@@ -122,6 +128,7 @@
             id: generateId(),
             name: name || `Step ${steps.length + 1}`,
             audioResourceId: null,
+            audioLoop: false,
             frames: []
         };
         steps.push(newStep);
@@ -136,6 +143,7 @@
             id: generateId(),
             name: `${currentStep.name} (Copy)`,
             audioResourceId: currentStep.audioResourceId,
+            audioLoop: currentStep.audioLoop,
             frames: currentStep.frames.map(frame => ({
                 ...frame,
                 id: generateId()
@@ -181,14 +189,117 @@
     }
 
     // --- Resource Manager Logic ---
+    function updateResourceLists() {
+        // Render Sidebar List (Mini)
+        renderResourceList(el.resourceList, 'mini');
+        // Render Modal List (Full) if modal is open (or just always update it if it's cheap)
+        if (!el.resourceModal.classList.contains('hidden')) {
+            renderResourceList(el.resourceListFull, 'manage');
+        }
+    }
+
     function renderResourceList(container, mode = 'manage', callback = null) {
+        if (!container) return;
         container.innerHTML = '';
         if (resources.length === 0) {
-            container.innerHTML = '<p class="hint" style="text-align:center;">Chưa có tài nguyên nào.</p>';
+            if (mode === 'mini') {
+                container.innerHTML = `
+                    <div class="empty-resource-hint">
+                        <span>📂</span>
+                        <span>Kéo thả file vào đây</span>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = '<p class="hint" style="text-align:center; font-size: 0.8rem;">Chưa có tài nguyên.</p>';
+            }
             return;
         }
 
         resources.forEach(res => {
+            const item = document.createElement('div');
+            item.className = 'resource-item';
+            
+            let icon = '📄';
+            if (res.type === 'image') icon = `<img src="${res.url}">`;
+            else if (res.type === 'video') icon = '🎬';
+            else if (res.type === 'audio') icon = '🎵';
+            else if (res.type === 'web') icon = '🌐';
+
+            // Different layout for mini vs manage/pick
+            if (mode === 'mini') {
+                item.innerHTML = `
+                    <div class="res-thumb" style="width:30px; height:30px; font-size:1rem;">${icon}</div>
+                    <div class="res-info">
+                        <div class="res-name" style="font-size:0.8rem;" title="${res.name}">${res.name}</div>
+                    </div>
+                    <button class="btn-icon delete-res-btn" title="Xóa" style="font-size: 0.8rem; padding: 2px; color: #dc3545;">✕</button>
+                `;
+            } else {
+                item.innerHTML = `
+                    <div class="res-thumb">${icon}</div>
+                    <div class="res-info">
+                        <div class="res-name" title="${res.name}">${res.name}</div>
+                        <div class="res-type">${res.type}</div>
+                    </div>
+                    <div class="res-actions">
+                        ${mode === 'manage' 
+                            ? `<button class="btn-danger btn-sm delete-res-btn">Xóa</button>` 
+                            : `<button class="btn-primary btn-sm select-res-btn">Chọn</button>`
+                        }
+                    </div>
+                `;
+            }
+
+            if (mode === 'manage' || mode === 'mini') {
+                const deleteBtn = item.querySelector('.delete-res-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (confirm('Xóa tài nguyên này? Các frame sử dụng nó sẽ bị lỗi.')) {
+                            resources = resources.filter(r => r.id !== res.id);
+                            updateResourceLists();
+                            
+                            // Update current step if it uses this resource for audio
+                            const step = steps.find(s => s.id === currentStepId);
+                            if (step && step.audioResourceId === res.id) {
+                                step.audioResourceId = null;
+                                selectStep(step.id);
+                            } else if (step) {
+                                // Re-render frames to show placeholder if needed
+                                renderFrames(step);
+                            }
+                        }
+                    });
+                }
+            } else if (mode === 'pick') {
+                item.querySelector('.select-res-btn').addEventListener('click', () => {
+                    if (callback) callback(res.id);
+                    el.resourcePickerModal.classList.add('hidden');
+                });
+            }
+
+            container.appendChild(item);
+        });
+    }
+
+    function openResourcePicker(filterType, callback) {
+        // Filter resources if needed
+        const filteredResources = filterType 
+            ? resources.filter(r => r.type === filterType) 
+            : resources;
+            
+        renderResourceListWithData(el.pickerList, filteredResources, 'pick', callback);
+        el.resourcePickerModal.classList.remove('hidden');
+    }
+
+    function renderResourceListWithData(container, data, mode, callback) {
+        container.innerHTML = '';
+        if (data.length === 0) {
+            container.innerHTML = '<p class="hint" style="text-align:center;">Không tìm thấy tài nguyên phù hợp.</p>';
+            return;
+        }
+        
+        data.forEach(res => {
             const item = document.createElement('div');
             item.className = 'resource-item';
             
@@ -205,35 +316,17 @@
                     <div class="res-type">${res.type}</div>
                 </div>
                 <div class="res-actions">
-                    ${mode === 'manage' 
-                        ? `<button class="btn-danger btn-sm delete-res-btn">Xóa</button>` 
-                        : `<button class="btn-primary btn-sm select-res-btn">Chọn</button>`
-                    }
+                    <button class="btn-primary btn-sm select-res-btn">Chọn</button>
                 </div>
             `;
-
-            if (mode === 'manage') {
-                item.querySelector('.delete-res-btn').addEventListener('click', () => {
-                    if (confirm('Xóa tài nguyên này? Các frame sử dụng nó sẽ bị lỗi.')) {
-                        resources = resources.filter(r => r.id !== res.id);
-                        renderResourceList(container, mode);
-                        if (currentStepId) selectStep(currentStepId);
-                    }
-                });
-            } else {
-                item.querySelector('.select-res-btn').addEventListener('click', () => {
-                    if (callback) callback(res.id);
-                    el.resourcePickerModal.classList.add('hidden');
-                });
-            }
-
+            
+            item.querySelector('.select-res-btn').addEventListener('click', () => {
+                if (callback) callback(res.id);
+                el.resourcePickerModal.classList.add('hidden');
+            });
+            
             container.appendChild(item);
         });
-    }
-
-    function openResourcePicker(filterType, callback) {
-        renderResourceList(el.pickerList, 'pick', callback);
-        el.resourcePickerModal.classList.remove('hidden');
     }
 
     // --- Export / Import ---
@@ -277,6 +370,7 @@
                     file: null 
                 }));
 
+                updateResourceLists();
                 renderMissingResources();
                 el.importModal.classList.remove('hidden');
 
@@ -330,6 +424,7 @@
                     res.url = URL.createObjectURL(file);
                     res.file = file;
                     renderMissingResources();
+                    updateResourceLists();
                 }
             });
 
@@ -357,6 +452,7 @@
 
         if (matchCount > 0) {
             renderMissingResources();
+            updateResourceLists();
             alert(`Đã tự động khớp ${matchCount} file.`);
         } else {
             alert("Không tìm thấy file nào trùng tên với danh sách thiếu.");
@@ -389,6 +485,7 @@
         });
 
         el.stepNameInput.value = step.name;
+        el.stepAudioLoopCheckbox.checked = step.audioLoop || false;
         
         const audioRes = getResource(step.audioResourceId);
         if (audioRes && audioRes.url) {
@@ -603,6 +700,34 @@
         renderFrames(step);
     }
 
+    // --- Drag and Drop for Files ---
+    function bindDragAndDropEvents() {
+        const dropZone = el.resourceSection;
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                Array.from(files).forEach(file => addResource(file));
+            }
+        });
+    }
+
     // --- Event Listeners ---
     function bindEvents() {
         el.addStepBtn.addEventListener('click', () => {
@@ -622,14 +747,13 @@
         });
 
         el.manageResourcesBtn.addEventListener('click', () => {
-            renderResourceList(el.resourceList, 'manage');
+            renderResourceList(el.resourceListFull, 'manage');
             el.resourceModal.classList.remove('hidden');
         });
 
         el.addResourceBtn.addEventListener('click', () => el.addResourceInput.click());
         el.addResourceInput.addEventListener('change', (e) => {
             Array.from(e.target.files).forEach(file => addResource(file));
-            renderResourceList(el.resourceList, 'manage');
             e.target.value = '';
         });
 
@@ -637,7 +761,6 @@
             const url = prompt("Nhập URL trang web (ví dụ: https://example.com):");
             if (url) {
                 addResource(url, 'web', url);
-                renderResourceList(el.resourceList, 'manage');
             }
         });
 
@@ -686,6 +809,13 @@
             if (step) {
                 step.audioResourceId = null;
                 selectStep(step.id);
+            }
+        });
+
+        el.stepAudioLoopCheckbox.addEventListener('change', (e) => {
+            const step = steps.find(s => s.id === currentStepId);
+            if (step) {
+                step.audioLoop = e.target.checked;
             }
         });
 

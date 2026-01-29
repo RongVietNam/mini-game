@@ -10,61 +10,108 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar: Step List -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2>Danh sách Step</h2>
-                <button id="add-step-btn" class="btn-primary">+ Thêm Step</button>
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <button id="back-home-btn" class="btn-icon" title="Về trang chủ">🏠</button>
+                <h1 class="app-title">Trình chiếu Đa phương tiện</h1>
             </div>
-            <div id="step-list" class="step-list">
-                <!-- Steps will be injected here -->
+            <div class="header-right">
+
             </div>
-            <div class="sidebar-footer">
-                <button id="manage-resources-btn" class="btn-dashed" style="margin-bottom: 0.5rem;">📁 Quản lý Tài nguyên</button>
+        </header>
+
+        <!-- Main Body -->
+        <div class="app-body">
+            <!-- Left Sidebar: Resources & Settings -->
+            <aside class="left-sidebar">
+                <!-- Resources Section -->
+                <div class="sidebar-section resources-section">
+                    <div class="section-header">
+                        <h3>Tài nguyên</h3>
+                        <button id="manage-resources-btn" class="btn-icon" title="Quản lý Tài nguyên">⚙</button>
+                    </div>
+                    <div class="resource-quick-actions">
+                        <button id="add-resource-btn" class="btn-secondary btn-sm">Upload</button>
+                        <button id="add-web-resource-btn" class="btn-secondary btn-sm">Link Web</button>
+                        <input type="file" id="add-resource-input" multiple style="display: none;">
+                    </div>
+                    <div id="resource-list" class="resource-list-mini">
+                        <!-- Resource items will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Element Settings Section -->
+                <div class="sidebar-section settings-section">
+                    <div class="section-header">
+                        <h3>Cài đặt Step</h3>
+                    </div>
+                    <div class="settings-content">
+                        <div class="setting-group">
+                            <label>Tên Step:</label>
+                            <input type="text" id="step-name-input" placeholder="Nhập tên step...">
+                        </div>
+                        <div class="setting-group">
+                            <label>Nhạc nền:</label>
+                            <div class="audio-control">
+                                <span id="step-audio-name" class="resource-name">Chưa có</span>
+                                <div class="audio-actions">
+                                    <button id="select-step-audio-btn" class="btn-secondary btn-xs">Chọn</button>
+                                    <button id="remove-audio-btn" class="btn-icon hidden" title="Xóa">✕</button>
+                                </div>
+                            </div>
+                            <div class="checkbox-group" style="margin-top: 5px;">
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 0.85rem; cursor: pointer; color: #6c757d;">
+                                    <input type="checkbox" id="step-audio-loop-checkbox"> Tự động lặp lại
+                                </label>
+                            </div>
+                            <audio id="audio-preview" controls style="display: none; width: 100%; margin-top: 5px; height: 30px;"></audio>
+                        </div>
+                        <!-- Future: Background color setting -->
+                        <div class="step-actions-row">
+                            <button id="copy-step-btn" class="btn-secondary btn-sm">Copy Step</button>
+                            <button id="delete-step-btn" class="btn-danger btn-sm">Xóa Step</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Editor Area -->
+            <main class="editor-area" id="editor-area">
+                <div class="frames-wrapper">
+                    <div id="frames-canvas" class="frames-canvas">
+                        <!-- Frames will be injected here as absolute positioned elements -->
+                    </div>
+
+                    <div class="canvas-toolbar">
+                        <button id="add-frame-btn" class="btn-primary">+ Thêm khung hình</button>
+                        <button id="fullscreen-frame-btn" class="btn-secondary">Thêm khung Toàn màn hình</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-controls">
                 <div class="data-actions">
-                    <button id="export-btn" class="btn-secondary btn-sm">⬇ Export JSON</button>
-                    <button id="import-btn" class="btn-secondary btn-sm">⬆ Import JSON</button>
+                    <button id="import-btn" class="btn-secondary btn-sm">⬆ Import</button>
+                    <button id="export-btn" class="btn-secondary btn-sm">⬇ Export</button>
                     <input type="file" id="import-file-input" accept=".json" style="display: none;">
                 </div>
-                <button id="present-btn" class="btn-success">▶ Trình chiếu</button>
-                <button id="back-home-btn" class="btn-secondary">🏠 Về trang chủ</button>
-            </div>
-        </aside>
-
-        <!-- Main Content: Step Editor -->
-        <main class="editor-area" id="editor-area">
-            <div class="editor-header">
-                <div class="step-title-edit">
-                    <label>Tên Step:</label>
-                    <input type="text" id="step-name-input" placeholder="Nhập tên step...">
-                </div>
-                <div class="step-audio-config">
-                    <label>Âm thanh nền:</label>
-                    <span id="step-audio-name" class="resource-name">Chưa có</span>
-                    <button id="select-step-audio-btn" class="btn-secondary btn-sm">Chọn</button>
-                    <button id="remove-audio-btn" class="btn-icon hidden" title="Xóa audio">✕</button>
-                    <audio id="audio-preview" controls style="display: none; height: 30px; margin-left: 5px;"></audio>
-                </div>
-                <div class="step-actions">
-                    <button id="copy-step-btn" class="btn-secondary" title="Nhân bản Step này">Copy</button>
-                    <button id="delete-step-btn" class="btn-danger" title="Xóa Step này">Xóa</button>
-                </div>
+                <button id="present-btn" class="btn-success">▶ Trình chiếu (Preview)</button>
             </div>
 
-            <div class="frames-wrapper">
-                <div id="frames-canvas" class="frames-canvas">
-                    <!-- Frames will be injected here as absolute positioned elements -->
-                </div>
-
-                <div class="canvas-toolbar">
-                    <button id="add-frame-btn" class="btn-primary">+ Thêm khung hình</button>
-                    <button id="fullscreen-frame-btn" class="btn-secondary">Thêm khung Toàn màn hình</button>
+            <div class="step-list-container">
+                <button id="add-step-btn" class="add-step-card">+ Thêm Step</button>
+                <div id="step-list" class="step-list-horizontal">
+                    <!-- Steps will be injected here -->
                 </div>
             </div>
-        </main>
+        </footer>
     </div>
 
-    <!-- Modal: Resource Manager -->
+    <!-- Modal: Resource Manager (Full View) -->
     <div id="resource-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -72,15 +119,9 @@
                 <button class="close-modal-btn">✕</button>
             </div>
             <div class="modal-body">
-                <div class="resource-toolbar">
-                    <input type="file" id="add-resource-input" multiple style="display: none;">
-                    <button id="add-resource-btn" class="btn-primary">Upload File</button>
-                    <button id="add-web-resource-btn" class="btn-secondary">Thêm Link Web</button>
-                </div>
-                <p class="hint">Hỗ trợ: Ảnh, Video, MP3, Website (Iframe)</p>
-                <div id="resource-list" class="resource-list">
-                    <!-- Resource items -->
-                </div>
+                <p class="hint">Danh sách đầy đủ các tài nguyên trong dự án.</p>
+                <!-- This list is reused/re-rendered by script.js logic -->
+                <div id="resource-list-full" class="resource-list"></div>
             </div>
             <div class="modal-footer">
                 <button class="close-modal-btn btn-secondary">Đóng</button>

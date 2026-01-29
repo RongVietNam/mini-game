@@ -143,10 +143,16 @@
                 <style>
                     body { margin: 0; background: #000; overflow: hidden; height: 100vh; width: 100vw; cursor: none; }
                     .canvas { position: relative; width: 100%; height: 100%; transition: opacity 0.3s; }
-                    .frame { position: absolute; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+                    .frame { 
+                        position: absolute; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        overflow: hidden;
+                    }
                     .frame img, .frame video { width: 100%; height: 100%; object-fit: contain; }
                     .frame.fit-cover img, .frame.fit-cover video { object-fit: cover; }
-                    .frame iframe { width: 100%; height: 100%; border: none; pointer-events: auto; }
+                    .frame iframe { width: 100%; height: 100%; border: none; pointer-events: auto; background: #fff; }
                     
                     #black-overlay {
                         position: fixed;
@@ -257,6 +263,7 @@
                         if (step.audioUrl) {
                             if (bgAudio.src !== step.audioUrl) {
                                 bgAudio.src = step.audioUrl;
+                                bgAudio.loop = step.audioLoop || false;
                                 bgAudio.play().catch(e => console.log("Audio play failed", e));
                             } else if (bgAudio.paused) {
                                 bgAudio.play();
@@ -301,6 +308,8 @@
                                 } else if (frame.type === 'web') {
                                     const iframe = document.createElement('iframe');
                                     iframe.src = frame.url;
+                                    iframe.allow = "autoplay; fullscreen";
+                                    iframe.style.backgroundColor = '#fff';
                                     div.appendChild(iframe);
                                 }
                             }
@@ -348,6 +357,7 @@
                     iframe.style.height = '100%';
                     iframe.style.border = 'none';
                     iframe.style.pointerEvents = 'none'; // Disable interaction in preview
+                    iframe.style.backgroundColor = '#fff';
                     div.appendChild(iframe);
                 }
             } else {
