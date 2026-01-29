@@ -17,7 +17,7 @@
                 <h1 class="app-title">Trình chiếu Đa phương tiện</h1>
             </div>
             <div class="header-right">
-
+                <span class="project-name">Project: Mini Game</span>
             </div>
         </header>
 
@@ -34,6 +34,7 @@
                     <div class="resource-quick-actions">
                         <button id="add-resource-btn" class="btn-secondary btn-sm">Upload</button>
                         <button id="add-web-resource-btn" class="btn-secondary btn-sm">Link Web</button>
+                        <button id="add-app-resource-btn" class="btn-primary btn-sm">Mini App</button>
                         <input type="file" id="add-resource-input" multiple style="display: none;">
                     </div>
                     <div id="resource-list" class="resource-list-mini">
@@ -144,6 +145,52 @@
         </div>
     </div>
 
+    <!-- Modal: App Configuration -->
+    <div id="app-config-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cấu hình Mini App</h3>
+                <button class="close-config-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="hint">Thêm các tham số (Parameters) để truyền vào URL của App.</p>
+                <div class="config-table-header">
+                    <span>Key (Tên tham số)</span>
+                    <span>Value (Giá trị)</span>
+                    <span></span>
+                </div>
+                <div id="config-params-list" class="config-params-list">
+                    <!-- Param items -->
+                </div>
+                <button id="add-param-btn" class="btn-dashed" style="margin-top: 10px;">+ Thêm tham số</button>
+            </div>
+            <div class="modal-footer">
+                <button id="save-config-btn" class="btn-primary">Lưu Cấu hình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Select Mini App -->
+    <div id="select-app-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Chọn Mini App</h3>
+                <button class="close-select-app-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label>Chọn App:</label>
+                    <select id="mini-app-select" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #dee2e6;">
+                        <!-- Options will be injected here -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-add-app-btn" class="btn-primary">Thêm</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Import Missing Resources -->
     <div id="import-modal" class="modal hidden">
         <div class="modal-content">
@@ -199,6 +246,7 @@
                 <label class="checkbox-label">
                     <input type="checkbox" class="frame-cover-checkbox"> Fill
                 </label>
+                <button class="btn-secondary btn-xs config-app-btn hidden" title="Cấu hình App">⚙ Params</button>
             </div>
             <div class="resize-handle"></div>
         </div>

@@ -1,3 +1,19 @@
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --bg-color: #f4f4f4; /* Light Gray background */
+    --header-bg: #2c3e50; /* Dark Slate header */
+    --header-text: #ffffff;
+    --border-color: #e0e0e0;
+    --card-bg: #ffffff;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 8px rgba(0,0,0,0.1);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+}
+
 *,
 *::before,
 *::after {
@@ -6,9 +22,9 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  background-color: #f8f9fa;
-  color: #212529;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: #333;
   min-height: 100vh;
   line-height: 1.5;
 }
@@ -26,27 +42,32 @@ body.has-custom-bg {
   flex-direction: column;
 }
 
+/* Header */
 .app-header {
-  padding: 1rem 2rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #dee2e6;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  height: 60px;
+  background-color: var(--header-bg);
+  color: var(--header-text);
+  padding: 0 1.5rem;
+  box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 10;
+  display: flex;
+  align-items: center;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: #212529;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
 }
 
 .app-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
   gap: 1rem;
 }
 
@@ -56,10 +77,11 @@ body.has-custom-bg {
   gap: 0.5rem;
 }
 
+/* Main Layout */
 .app-main {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.9fr);
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.9fr);
   gap: 1.5rem;
   padding: 1.5rem;
   max-width: 1400px;
@@ -84,27 +106,29 @@ body.has-custom-bg {
   grid-area: score;
 }
 
+/* Panels */
 .panel {
-  background-color: #ffffff;
-  border-radius: 0.375rem;
-  padding: 1.25rem;
-  border: 1px solid #dee2e6;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  background-color: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
 }
 
 .panel h2 {
   margin-top: 0;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
   font-size: 1.25rem;
-  font-weight: 500;
-  border-bottom: 1px solid #dee2e6;
-  padding-bottom: 0.5rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+  color: #2c3e50;
 }
 
 .config-section {
   margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .config-section:last-child {
@@ -114,7 +138,7 @@ body.has-custom-bg {
 }
 
 .config-section h3 {
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.75rem;
   font-size: 1rem;
   font-weight: 600;
   color: #495057;
@@ -128,14 +152,16 @@ body.has-custom-bg {
 
 .field-group {
   flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 label {
   display: block;
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
-  color: #212529;
+  font-size: 0.85rem;
   font-weight: 500;
+  color: #555;
 }
 
 input[type="text"],
@@ -145,17 +171,17 @@ input[type="file"],
 input[type="color"] {
   display: block;
   width: 100%;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
   font-weight: 400;
   line-height: 1.5;
-  color: #212529;
-  background-color: #fff;
+  color: #333;
+  background-color: #f9f9f9;
   background-clip: padding-box;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--border-color);
   appearance: none;
-  border-radius: 0.375rem;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s;
 }
 
 input[type="color"] {
@@ -164,15 +190,14 @@ input[type="color"] {
 }
 
 input::placeholder {
-  color: #6c757d;
+  color: #adb5bd;
 }
 
 input:focus {
-  color: #212529;
+  color: #333;
   background-color: #fff;
-  border-color: #86b7fe;
+  border-color: var(--primary-color);
   outline: 0;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
 .inline-input {
@@ -187,38 +212,39 @@ input:focus {
 
 .hint {
   margin: 0.25rem 0 0;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: #6c757d;
 }
 
 .pill-list {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   max-height: 150px;
   overflow-y: auto;
-  padding: 0.25rem;
-  border: 1px solid #e9ecef;
-  border-radius: 0.375rem;
-  background-color: #f8f9fa;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: #f9f9f9;
 }
 
 .pill {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.65rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 50rem;
-  font-size: 0.875rem;
-  background-color: #e9ecef;
-  color: #212529;
-  border: 1px solid #dee2e6;
+  font-size: 0.85rem;
+  background-color: #fff;
+  color: #333;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .pill img {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -226,16 +252,17 @@ input:focus {
 .pill-remove {
   background: transparent;
   border: none;
-  color: #6c757d;
+  color: #adb5bd;
   cursor: pointer;
   font-size: 1rem;
   line-height: 1;
   padding: 0;
   margin-left: 0.25rem;
+  transition: color 0.2s;
 }
 
 .pill-remove:hover {
-  color: #dc3545;
+  color: var(--danger-color);
 }
 
 .config-grid {
@@ -251,13 +278,15 @@ input:focus {
   margin-top: 1rem;
 }
 
+/* Buttons */
 .btn-primary,
 .btn-secondary,
 .btn-danger {
-  display: inline-block;
-  font-weight: 400;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
   line-height: 1.5;
-  color: #212529;
   text-align: center;
   text-decoration: none;
   vertical-align: middle;
@@ -265,46 +294,47 @@ input:focus {
   user-select: none;
   background-color: transparent;
   border: 1px solid transparent;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  border-radius: 0.375rem;
-  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+  gap: 0.5rem;
 }
 
 .btn-primary {
   color: #fff;
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+  background-color: var(--primary-color);
+  box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
 }
 
 .btn-primary:hover {
-  color: #fff;
   background-color: #0b5ed7;
-  border-color: #0a58ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(13, 110, 253, 0.4);
 }
 
 .btn-secondary {
-  color: #fff;
-  background-color: #6c757d;
-  border-color: #6c757d;
+  color: #555;
+  background-color: #fff;
+  border-color: #ced4da;
 }
 
 .btn-secondary:hover {
-  color: #fff;
-  background-color: #5c636a;
-  border-color: #565e64;
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+  color: #333;
 }
 
 .btn-danger {
   color: #fff;
-  background-color: #dc3545;
-  border-color: #dc3545;
+  background-color: var(--danger-color);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
 }
 
 .btn-danger:hover {
-  color: #fff;
   background-color: #bb2d3b;
-  border-color: #b02a37;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(220, 53, 69, 0.4);
 }
 
 button:disabled {
@@ -312,6 +342,7 @@ button:disabled {
   pointer-events: none;
 }
 
+/* Scoreboard */
 .score-team-list {
   display: flex;
   flex-wrap: wrap;
@@ -320,27 +351,29 @@ button:disabled {
 }
 
 .score-team {
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  border: 1px solid #dee2e6;
-  font-size: 0.875rem;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  font-size: 0.9rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: #f8f9fa;
-  color: #212529;
+  background-color: #fff;
+  color: #333;
   transition: all 0.2s;
 }
 
 .score-team:hover {
-  background-color: #e9ecef;
+  background-color: #f8f9fa;
+  border-color: #ced4da;
 }
 
 .score-team.selected {
-  background-color: #198754;
-  border-color: #198754;
+  background-color: var(--success-color);
+  border-color: var(--success-color);
   color: #fff;
+  box-shadow: 0 2px 4px rgba(25, 135, 84, 0.3);
 }
 
 .score-actions {
@@ -360,20 +393,20 @@ button:disabled {
 }
 
 .score-table thead {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
+  background-color: #f9f9f9;
+  border-bottom: 2px solid var(--border-color);
 }
 
 .score-table th,
 .score-table td {
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid #dee2e6;
-  color: #212529;
+  border-bottom: 1px solid var(--border-color);
+  color: #333;
 }
 
 .score-table tbody tr:nth-child(even) {
-  background-color: #f8f9fa;
+  background-color: #f9f9f9;
 }
 
 .score-table tbody tr:nth-child(odd) {
@@ -385,16 +418,17 @@ button:disabled {
   text-align: center;
 }
 
+/* Footer */
 .app-footer {
-  padding: 1rem 0;
-  font-size: 0.875rem;
-  color: #6c757d;
-  background-color: #f8f9fa;
-  border-top: 1px solid #dee2e6;
+  padding: 1.5rem 0;
+  font-size: 0.85rem;
+  color: #fff;
+  background-color: var(--header-bg);
   text-align: center;
+  margin-top: auto;
 }
 
-/* Toàn màn hình hiển thị ảnh + đồng hồ lớn */
+/* Fullscreen Overlays */
 .fullscreen-overlay {
   position: fixed;
   inset: 0;
@@ -422,7 +456,7 @@ button:disabled {
   gap: 1.5rem;
   flex-wrap: wrap;
   font-size: 1.1rem;
-  color: #212529;
+  color: #333;
 }
 
 .fullscreen-overlay.hidden {
@@ -435,10 +469,10 @@ button:disabled {
   max-width: 100vw;
   object-fit: contain;
   margin-bottom: 1rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  border-radius: 0.5rem;
-  border: 1px solid #dee2e6;
-  background-color: #f8f9fa;
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background-color: #f9f9f9;
   transition: opacity 0.15s ease-in-out;
 }
 
@@ -449,17 +483,17 @@ button:disabled {
 .fullscreen-overlay #fullscreen-timer {
   font-size: min(15vw, 8rem);
   font-weight: 700;
-  color: #dc3545;
+  color: var(--danger-color);
   line-height: 1;
 }
 
-/* Toàn màn hình chấm điểm - Layout 3 cột */
+/* Fullscreen Score Overlay */
 .fullscreen-score-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(255, 255, 255, 0.98); /* Nền trắng đục */
+  background-color: rgba(255, 255, 255, 0.98);
   display: flex;
-  align-items: stretch; /* Kéo giãn chiều cao */
+  align-items: stretch;
   justify-content: space-between;
   z-index: 1050;
   padding: 1.5rem;
@@ -477,27 +511,27 @@ button:disabled {
 }
 
 .fs-left {
-  flex: 0 0 280px; /* Cố định chiều rộng cột trái */
+  flex: 0 0 300px;
 }
 
 .fs-center {
-  flex: 1 1 auto; /* Chiếm phần còn lại, cho phép co giãn */
+  flex: 1 1 auto;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  min-width: 0; /* Ngăn chặn overflow ngoài ý muốn */
+  min-width: 0;
 }
 
 .fs-right {
-  flex: 0 0 280px; /* Cố định chiều rộng cột phải */
+  flex: 0 0 300px;
 }
 
 .fs-panel {
   background-color: #fff;
-  border: 1px solid #dee2e6;
-  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
-  box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-md);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -509,23 +543,23 @@ button:disabled {
   margin-top: 0;
   margin-bottom: 1.25rem;
   text-align: center;
-  color: #212529;
+  color: #2c3e50;
   border-bottom: 2px solid #f1f3f5;
   padding-bottom: 0.75rem;
 }
 
-/* Ảnh ở giữa */
+/* Scoring Image */
 #scoring-image {
   max-width: 100%;
-  height: 75vh; /* Tương tự ảnh pose */
+  height: 75vh;
   max-height: 90vh;
   object-fit: contain;
-  border-radius: 0.5rem;
-  box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.15);
-  border: 1px solid #dee2e6;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
 }
 
-/* Danh sách đội bên trái */
+/* Fullscreen Score Team List */
 .fullscreen-score-team-list {
   display: flex;
   flex-direction: column;
@@ -539,31 +573,32 @@ button:disabled {
 .fullscreen-score-team-list .score-team {
   font-size: 1rem;
   padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid #dee2e6;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #f8f9fa;
-  color: #212529;
+  background-color: #fff;
+  color: #333;
   transition: all 0.15s ease;
   width: 100%;
 }
 
 .fullscreen-score-team-list .score-team:hover {
-  background-color: #e9ecef;
+  background-color: #f8f9fa;
   transform: translateX(2px);
+  border-color: #ced4da;
 }
 
 .fullscreen-score-team-list .score-team.selected {
-  background-color: #198754;
-  border-color: #198754;
+  background-color: var(--success-color);
+  border-color: var(--success-color);
   color: #fff;
   box-shadow: 0 2px 5px rgba(25, 135, 84, 0.3);
 }
 
-/* Bảng xếp hạng bên phải */
+/* Scoreboard Container */
 .fs-scoreboard-container {
   flex: 1;
   overflow-y: auto;
@@ -580,6 +615,7 @@ button:disabled {
   padding: 0.75rem 0.5rem;
   text-align: left;
   border-bottom: 1px solid #f1f3f5;
+  color: #333;
 }
 
 .fs-live-table th:last-child,
@@ -589,7 +625,7 @@ button:disabled {
 }
 
 .fs-live-table tbody tr:nth-child(even) {
-  background-color: #f8f9fa;
+  background-color: #f9f9f9;
 }
 
 .fullscreen-score-actions-group {
@@ -605,7 +641,7 @@ button:disabled {
   width: 100%;
 }
 
-/* Toàn màn hình bảng điểm kết thúc game */
+/* Fullscreen Scoreboard Overlay */
 .fullscreen-scoreboard-overlay {
   position: fixed;
   inset: 0;
@@ -627,8 +663,8 @@ button:disabled {
   max-height: 90vh;
   overflow: auto;
   background-color: #fff;
-  border: 1px solid #dee2e6;
-  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
   padding: 2rem;
 }
@@ -638,7 +674,7 @@ button:disabled {
   text-align: center;
   font-size: 2.5rem;
   font-weight: 700;
-  color: #212529;
+  color: #2c3e50;
 }
 
 .fullscreen-scoreboard-table {
@@ -648,16 +684,16 @@ button:disabled {
 }
 
 .fullscreen-scoreboard-table thead {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
+  background-color: #f9f9f9;
+  border-bottom: 2px solid var(--border-color);
 }
 
 .fullscreen-scoreboard-table th,
 .fullscreen-scoreboard-table td {
   padding: 1rem;
   text-align: left;
-  border-bottom: 1px solid #dee2e6;
-  color: #212529;
+  border-bottom: 1px solid var(--border-color);
+  color: #333;
 }
 
 .fullscreen-scoreboard-table th:last-child,
@@ -671,7 +707,7 @@ button:disabled {
 }
 
 .fullscreen-scoreboard-table tbody tr:nth-child(even) {
-  background-color: #f8f9fa;
+  background-color: #f9f9f9;
 }
 
 .fullscreen-scoreboard-actions {
@@ -682,6 +718,7 @@ button:disabled {
   flex-wrap: wrap;
 }
 
+/* Fullscreen Choice Overlay */
 .fullscreen-choice-overlay {
   position: fixed;
   inset: 0;
@@ -702,8 +739,8 @@ button:disabled {
   max-width: 800px;
   text-align: center;
   background-color: #fff;
-  border: 1px solid #dee2e6;
-  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
   padding: 3rem 2rem;
 }
@@ -712,7 +749,7 @@ button:disabled {
   margin: 0 0 1rem;
   font-size: 2.5rem;
   font-weight: 700;
-  color: #212529;
+  color: #2c3e50;
 }
 
 .fullscreen-choice-hint {
@@ -722,7 +759,7 @@ button:disabled {
 }
 
 .fullscreen-choice-hint strong {
-  color: #0d6efd;
+  color: var(--primary-color);
   font-size: 1.2em;
 }
 

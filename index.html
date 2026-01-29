@@ -5,80 +5,115 @@
     <title>Danh sách Mini App</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
+      :root {
+        --primary-color: #0d6efd;
+        --secondary-color: #6c757d;
+        --success-color: #198754;
+        --danger-color: #dc3545;
+        --bg-color: #f4f4f4; /* Light Gray background */
+        --header-bg: #2c3e50; /* Dark Slate header */
+        --header-text: #ffffff;
+        --border-color: #e0e0e0;
+        --card-bg: #ffffff;
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 8px rgba(0,0,0,0.1);
+        --radius-md: 8px;
+        --radius-lg: 12px;
+      }
+
       body {
         margin: 0;
         font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background-color: #f8f9fa;
-        color: #212529;
+        background-color: var(--bg-color);
+        color: #333;
         display: flex;
         flex-direction: column;
         align-items: center;
         min-height: 100vh;
-        padding: 2rem;
       }
 
-      h1 {
+      /* Header */
+      .app-header {
+        width: 100%;
+        height: 60px;
+        background-color: var(--header-bg);
+        color: var(--header-text);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0 1.5rem;
+        box-shadow: var(--shadow-sm);
         margin-bottom: 2rem;
-        color: #343a40;
+      }
+
+      .app-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #fff;
       }
 
       .game-list {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 1.5rem;
         width: 100%;
         max-width: 1000px;
+        padding: 0 2rem 2rem;
       }
 
       .game-card {
-        background: #fff;
-        border: 1px solid #dee2e6;
-        border-radius: 0.5rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
         overflow: hidden;
         transition: transform 0.2s, box-shadow 0.2s;
         text-decoration: none;
         color: inherit;
         display: flex;
         flex-direction: column;
+        box-shadow: var(--shadow-sm);
       }
 
       .game-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        box-shadow: var(--shadow-md);
         border-color: #ced4da;
       }
 
       .game-thumbnail {
-        height: 160px;
-        background-color: #e9ecef;
+        height: 180px;
+        background-color: #f1f3f5;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 3rem;
+        font-size: 3.5rem;
         color: #adb5bd;
       }
 
       .game-info {
-        padding: 1.25rem;
+        padding: 1.5rem;
       }
 
       .game-title {
         font-size: 1.25rem;
         font-weight: 600;
-        margin: 0 0 0.5rem;
-        color: #0d6efd;
+        margin: 0 0 0.75rem;
+        color: var(--primary-color);
       }
 
       .game-description {
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         color: #6c757d;
         margin: 0;
-        line-height: 1.5;
+        line-height: 1.6;
       }
     </style>
   </head>
   <body>
-    <h1>Danh sách Mini App</h1>
+    <header class="app-header">
+      <h1 class="app-title">Danh sách Mini App</h1>
+    </header>
 
     <div class="game-list">
       <!-- Game 1: Pose Challenge -->

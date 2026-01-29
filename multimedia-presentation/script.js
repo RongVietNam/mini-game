@@ -3,9 +3,16 @@
     let steps = [];
     let resources = []; // { id, name, type, url, file }
     let currentStepId = null;
+    let currentConfigFrameId = null; // Track which frame is being configured
     const MAX_FRAMES = 10;
     const CHANNEL_NAME = 'multimedia_presentation_channel';
     const broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
+
+    // Predefined Mini Apps
+    const AVAILABLE_APPS = [
+        { name: 'Pose Challenge', url: '../pose-challenge/index.html' },
+        // Add more apps here if needed
+    ];
 
     // --- DOM Elements ---
     const el = {
@@ -36,11 +43,14 @@
         resourceModal: document.getElementById('resource-modal'),
         resourcePickerModal: document.getElementById('resource-picker-modal'),
         importModal: document.getElementById('import-modal'),
+        appConfigModal: document.getElementById('app-config-modal'),
+        selectAppModal: document.getElementById('select-app-modal'),
         
         // Resource Manager
         addResourceInput: document.getElementById('add-resource-input'),
         addResourceBtn: document.getElementById('add-resource-btn'),
         addWebResourceBtn: document.getElementById('add-web-resource-btn'),
+        addAppResourceBtn: document.getElementById('add-app-resource-btn'),
         resourceList: document.getElementById('resource-list'), // Sidebar list
         resourceListFull: document.getElementById('resource-list-full'), // Modal list
         resourceSection: document.querySelector('.resources-section'),
@@ -53,6 +63,15 @@
         finishImportBtn: document.getElementById('finish-import-btn'),
         autoMatchBtn: document.getElementById('auto-match-btn'),
         autoMatchInput: document.getElementById('auto-match-input'),
+        
+        // App Config
+        configParamsList: document.getElementById('config-params-list'),
+        addParamBtn: document.getElementById('add-param-btn'),
+        saveConfigBtn: document.getElementById('save-config-btn'),
+        
+        // Select App
+        miniAppSelect: document.getElementById('mini-app-select'),
+        confirmAddAppBtn: document.getElementById('confirm-add-app-btn'),
         
         frameTemplate: document.getElementById('frame-template'),
     };
@@ -109,11 +128,11 @@
                 file: file
             };
         } else {
-            // Web Link
+            // Web Link or App
             newRes = {
                 id: generateId(),
                 name: name || fileOrUrl,
-                type: 'web',
+                type: type || 'web',
                 url: fileOrUrl,
                 file: null
             };
@@ -179,6 +198,7 @@
             loop: false,
             autoplay: true,
             fitCover: false,
+            appConfig: {}, // Store key-value params for apps
             x: frameConfig.x,
             y: frameConfig.y,
             width: frameConfig.width,
@@ -224,6 +244,7 @@
             else if (res.type === 'video') icon = '🎬';
             else if (res.type === 'audio') icon = '🎵';
             else if (res.type === 'web') icon = '🌐';
+            else if (res.type === 'app') icon = '📱';
 
             // Different layout for mini vs manage/pick
             if (mode === 'mini') {
@@ -308,6 +329,7 @@
             else if (res.type === 'video') icon = '🎬';
             else if (res.type === 'audio') icon = '🎵';
             else if (res.type === 'web') icon = '🌐';
+            else if (res.type === 'app') icon = '📱';
 
             item.innerHTML = `
                 <div class="res-thumb">${icon}</div>
@@ -329,6 +351,71 @@
         });
     }
 
+    // --- App Configuration Logic ---
+    function openAppConfigModal(frame) {
+        currentConfigFrameId = frame.id;
+        el.configParamsList.innerHTML = '';
+        
+        const config = frame.appConfig || {};
+        Object.entries(config).forEach(([key, value]) => {
+            addParamRow(key, value);
+        });
+        
+        // Add one empty row if empty
+        if (Object.keys(config).length === 0) {
+            addParamRow();
+        }
+
+        el.appConfigModal.classList.remove('hidden');
+    }
+
+    function addParamRow(key = '', value = '') {
+        const row = document.createElement('div');
+        row.className = 'param-item';
+        row.innerHTML = `
+            <input type="text" class="param-key" placeholder="Key" value="${key}">
+            <input type="text" class="param-value" placeholder="Value" value="${value}">
+            <button class="btn-icon remove-param-btn" style="color: #dc3545;">✕</button>
+        `;
+        
+        row.querySelector('.remove-param-btn').addEventListener('click', () => {
+            row.remove();
+        });
+        
+        el.configParamsList.appendChild(row);
+    }
+
+    function saveAppConfig() {
+        const step = steps.find(s => s.id === currentStepId);
+        if (!step) return;
+        
+        const frame = step.frames.find(f => f.id === currentConfigFrameId);
+        if (!frame) return;
+
+        const newConfig = {};
+        el.configParamsList.querySelectorAll('.param-item').forEach(row => {
+            const key = row.querySelector('.param-key').value.trim();
+            const value = row.querySelector('.param-value').value.trim();
+            if (key) {
+                newConfig[key] = value;
+            }
+        });
+
+        frame.appConfig = newConfig;
+        el.appConfigModal.classList.add('hidden');
+        renderFrames(step); // Re-render to update iframe URL
+    }
+
+    function constructAppUrl(baseUrl, config) {
+        if (!config || Object.keys(config).length === 0) return baseUrl;
+        
+        const url = new URL(baseUrl, window.location.href); // Handle relative URLs
+        Object.entries(config).forEach(([key, value]) => {
+            url.searchParams.set(key, value);
+        });
+        return url.toString();
+    }
+
     // --- Export / Import ---
     function exportData() {
         const exportData = {
@@ -337,8 +424,8 @@
                 id: r.id,
                 name: r.name,
                 type: r.type,
-                // Export URL only if it's a web link
-                url: r.type === 'web' ? r.url : null
+                // Export URL only if it's a web link or app
+                url: (r.type === 'web' || r.type === 'app') ? r.url : null
             }))
         };
 
@@ -363,10 +450,10 @@
                 if (!data.steps || !data.resources) throw new Error("Invalid format");
                 
                 steps = data.steps;
-                // Restore resources, keeping web URLs
+                // Restore resources, keeping web/app URLs
                 resources = data.resources.map(r => ({ 
                     ...r, 
-                    url: r.type === 'web' ? r.url : null, 
+                    url: (r.type === 'web' || r.type === 'app') ? r.url : null, 
                     file: null 
                 }));
 
@@ -385,11 +472,11 @@
     function renderMissingResources() {
         el.missingResourceList.innerHTML = '';
         
-        // Filter out web resources as they don't need file upload
-        const missingFiles = resources.filter(r => r.type !== 'web');
+        // Filter out web/app resources as they don't need file upload
+        const missingFiles = resources.filter(r => r.type !== 'web' && r.type !== 'app');
         
         if (missingFiles.length === 0) {
-            el.missingResourceList.innerHTML = '<p class="hint">Tất cả tài nguyên web đã được khôi phục. Nếu có file ảnh/video, vui lòng kiểm tra lại.</p>';
+            el.missingResourceList.innerHTML = '<p class="hint">Tất cả tài nguyên web/app đã được khôi phục. Nếu có file ảnh/video, vui lòng kiểm tra lại.</p>';
         }
 
         missingFiles.forEach(res => {
@@ -441,7 +528,7 @@
     function autoMatchFiles(fileList) {
         let matchCount = 0;
         Array.from(fileList).forEach(file => {
-            const targetRes = resources.find(r => r.name === file.name && !r.url && r.type !== 'web');
+            const targetRes = resources.find(r => r.name === file.name && !r.url && r.type !== 'web' && r.type !== 'app');
             
             if (targetRes) {
                 targetRes.url = URL.createObjectURL(file);
@@ -546,6 +633,7 @@
 
             const uploadPlaceholder = card.querySelector('.upload-placeholder');
             const mediaPreview = card.querySelector('.media-preview');
+            const configBtn = card.querySelector('.config-app-btn');
             const res = getResource(frame.resourceId);
 
             if (res && res.url) {
@@ -557,23 +645,34 @@
                     const img = document.createElement('img');
                     img.src = res.url;
                     mediaPreview.appendChild(img);
+                    configBtn.classList.add('hidden');
                 } else if (res.type === 'video') {
                     const video = document.createElement('video');
                     video.src = res.url;
                     video.controls = true;
                     mediaPreview.appendChild(video);
-                } else if (res.type === 'web') {
+                    configBtn.classList.add('hidden');
+                } else if (res.type === 'web' || res.type === 'app') {
                     const iframe = document.createElement('iframe');
-                    iframe.src = res.url;
+                    // Construct URL with params if it's an app
+                    iframe.src = (res.type === 'app') ? constructAppUrl(res.url, frame.appConfig) : res.url;
                     iframe.style.width = '100%';
                     iframe.style.height = '100%';
                     iframe.style.border = 'none';
                     iframe.style.pointerEvents = 'none'; // Disable interaction in editor
                     mediaPreview.appendChild(iframe);
+                    
+                    if (res.type === 'app') {
+                        configBtn.classList.remove('hidden');
+                        configBtn.onclick = () => openAppConfigModal(frame);
+                    } else {
+                        configBtn.classList.add('hidden');
+                    }
                 }
             } else {
                 uploadPlaceholder.classList.remove('hidden');
                 mediaPreview.classList.add('hidden');
+                configBtn.classList.add('hidden');
             }
 
             if (frame.fitCover) card.classList.add('fit-cover');
@@ -764,12 +863,42 @@
             }
         });
 
+        el.addAppResourceBtn.addEventListener('click', () => {
+            // Populate select options
+            el.miniAppSelect.innerHTML = '';
+            AVAILABLE_APPS.forEach(app => {
+                const option = document.createElement('option');
+                option.value = app.url;
+                option.textContent = app.name;
+                el.miniAppSelect.appendChild(option);
+            });
+            el.selectAppModal.classList.remove('hidden');
+        });
+
+        el.confirmAddAppBtn.addEventListener('click', () => {
+            const url = el.miniAppSelect.value;
+            const name = el.miniAppSelect.options[el.miniAppSelect.selectedIndex].text;
+            if (url && name) {
+                addResource(url, 'app', name);
+                el.selectAppModal.classList.add('hidden');
+            }
+        });
+
         document.querySelectorAll('.close-modal-btn').forEach(btn => {
             btn.addEventListener('click', () => el.resourceModal.classList.add('hidden'));
         });
         document.querySelectorAll('.close-picker-btn').forEach(btn => {
             btn.addEventListener('click', () => el.resourcePickerModal.classList.add('hidden'));
         });
+        document.querySelector('.close-config-btn').addEventListener('click', () => {
+            el.appConfigModal.classList.add('hidden');
+        });
+        document.querySelector('.close-select-app-btn').addEventListener('click', () => {
+            el.selectAppModal.classList.add('hidden');
+        });
+
+        el.addParamBtn.addEventListener('click', () => addParamRow());
+        el.saveConfigBtn.addEventListener('click', saveAppConfig);
 
         el.finishImportBtn.addEventListener('click', () => {
             el.importModal.classList.add('hidden');
@@ -844,9 +973,11 @@
                 ...frame,
                 file: frame.resourceId ? (getResource(frame.resourceId)?.file || null) : null,
                 type: frame.resourceId ? (getResource(frame.resourceId)?.type || null) : null,
-                // Pass URL directly for web resources
-                url: (frame.resourceId && getResource(frame.resourceId)?.type === 'web') 
-                     ? getResource(frame.resourceId)?.url 
+                // Pass URL directly for web/app resources, constructing app URL with params
+                url: (frame.resourceId && (getResource(frame.resourceId)?.type === 'web' || getResource(frame.resourceId)?.type === 'app')) 
+                     ? (getResource(frame.resourceId)?.type === 'app' 
+                        ? constructAppUrl(getResource(frame.resourceId)?.url, frame.appConfig)
+                        : getResource(frame.resourceId)?.url)
                      : null
             }))
         }));
@@ -881,8 +1012,10 @@
                 ...frame,
                 file: frame.resourceId ? (getResource(frame.resourceId)?.file || null) : null,
                 type: frame.resourceId ? (getResource(frame.resourceId)?.type || null) : null,
-                url: (frame.resourceId && getResource(frame.resourceId)?.type === 'web') 
-                     ? getResource(frame.resourceId)?.url 
+                url: (frame.resourceId && (getResource(frame.resourceId)?.type === 'web' || getResource(frame.resourceId)?.type === 'app')) 
+                     ? (getResource(frame.resourceId)?.type === 'app' 
+                        ? constructAppUrl(getResource(frame.resourceId)?.url, frame.appConfig)
+                        : getResource(frame.resourceId)?.url)
                      : null
             }))
         }));
@@ -907,7 +1040,11 @@
                 audioUrl: step.audioResourceId ? (getResource(step.audioResourceId)?.url || null) : null,
                 frames: step.frames.map(frame => ({
                     ...frame,
-                    url: frame.resourceId ? (getResource(frame.resourceId)?.url || null) : null,
+                    url: frame.resourceId 
+                        ? (getResource(frame.resourceId)?.type === 'app' 
+                            ? constructAppUrl(getResource(frame.resourceId)?.url, frame.appConfig)
+                            : getResource(frame.resourceId)?.url || null)
+                        : null,
                     type: frame.resourceId ? (getResource(frame.resourceId)?.type || null) : null
                 }))
             };
