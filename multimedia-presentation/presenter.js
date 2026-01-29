@@ -141,14 +141,45 @@
                 <meta charset="UTF-8">
                 <title>Màn hình trình chiếu</title>
                 <style>
-                    body { margin: 0; background: #000; overflow: hidden; height: 100vh; width: 100vw; cursor: none; }
-                    .canvas { position: relative; width: 100%; height: 100%; transition: opacity 0.3s; }
+                    body { margin: 0; background: #000; overflow: hidden; height: 100vh; width: 100vw; cursor: none; display: flex; flex-direction: column; }
+                    
+                    /* Top Bar for Step Name */
+                    #top-bar {
+                        height: 60px;
+                        background-color: #000;
+                        color: #fff;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-family: system-ui, -apple-system, sans-serif;
+                        font-size: 24px;
+                        font-weight: bold;
+                        z-index: 2147483647;
+                        border-bottom: 1px solid #333;
+                        flex-shrink: 0;
+                        transition: opacity 0.5s;
+                        opacity: 0;
+                    }
+                    #top-bar.visible {
+                        opacity: 1;
+                    }
+
+                    .canvas { 
+                        position: relative; 
+                        flex: 1; 
+                        width: 100%; 
+                        transition: opacity 0.3s; 
+                        overflow: hidden;
+                    }
+                    
                     .frame { 
                         position: absolute; 
                         display: flex; 
                         align-items: center; 
                         justify-content: center; 
                         overflow: hidden;
+                        transform: translateZ(0);
+                        backface-visibility: hidden;
                     }
                     .frame img, .frame video { width: 100%; height: 100%; object-fit: contain; }
                     .frame.fit-cover img, .frame.fit-cover video { object-fit: cover; }
@@ -190,6 +221,7 @@
                 </style>
             </head>
             <body>
+                <div id="top-bar"></div>
                 <div id="canvas" class="canvas"></div>
                 <div id="black-overlay"></div>
                 
@@ -202,11 +234,13 @@
                     const canvas = document.getElementById('canvas');
                     const overlay = document.getElementById('black-overlay');
                     const startOverlay = document.getElementById('start-overlay');
+                    const topBar = document.getElementById('top-bar');
                     const bgAudio = document.getElementById('bg-audio');
                     const channel = new BroadcastChannel('${CHANNEL_NAME}');
                     
                     let isReady = false;
                     let pendingStep = null;
+                    let stepNameTimeout = null;
 
                     // Unlock Audio Context
                     startOverlay.addEventListener('click', () => {
@@ -257,8 +291,19 @@
                         });
                     }
 
+                    function showStepName(name) {
+                        topBar.textContent = name;
+                        topBar.classList.add('visible');
+                        
+                        if (stepNameTimeout) clearTimeout(stepNameTimeout);
+                        stepNameTimeout = setTimeout(() => {
+                            topBar.classList.remove('visible');
+                        }, 5000); // Hide after 5 seconds
+                    }
+
                     function renderStep(step) {
                         overlay.classList.remove('active');
+                        showStepName(step.name);
 
                         if (step.audioUrl) {
                             if (bgAudio.src !== step.audioUrl) {
@@ -305,7 +350,7 @@
                                     if (frame.autoplay) {
                                         video.play().catch(e => console.log("Video autoplay failed", e));
                                     }
-                                } else if (frame.type === 'web') {
+                                } else if (frame.type === 'web' || frame.type === 'app') {
                                     const iframe = document.createElement('iframe');
                                     iframe.src = frame.url;
                                     iframe.allow = "autoplay; fullscreen";
@@ -350,7 +395,7 @@
                     video.src = frame.url;
                     video.muted = true;
                     div.appendChild(video);
-                } else if (frame.type === 'web') {
+                } else if (frame.type === 'web' || frame.type === 'app') {
                     const iframe = document.createElement('iframe');
                     iframe.src = frame.url;
                     iframe.style.width = '100%';
@@ -369,6 +414,7 @@
                 div.style.fontSize = '10px';
                 div.style.color = '#555';
             }
+
             canvas.appendChild(div);
         });
         container.appendChild(canvas);
