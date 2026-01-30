@@ -24,7 +24,8 @@
         pauseSettingsBtn: document.getElementById('pause-settings-btn'),
         pauseSettingsPopover: document.getElementById('pause-settings-popover'),
         endBtn: document.getElementById('end-btn'),
-        clock: document.getElementById('clock')
+        clock: document.getElementById('clock'),
+        volumeSlider: document.getElementById('volume-slider'),
     };
 
     function init() {
@@ -81,6 +82,11 @@
         el.endBtn.addEventListener('click', () => {
             if (audienceWindow) audienceWindow.close();
             window.close();
+        });
+
+        el.volumeSlider.addEventListener('input', (e) => {
+            const volume = parseFloat(e.target.value);
+            broadcastChannel.postMessage({ type: 'SET_VOLUME', volume: volume });
         });
 
         document.addEventListener('keydown', (e) => {
@@ -255,7 +261,7 @@
                     });
 
                     channel.onmessage = (event) => {
-                        const { type, data, config } = event.data;
+                        const { type, data, config, volume } = event.data;
                         if (type === 'SHOW_STEP') {
                             if (isReady) {
                                 renderStep(data);
@@ -266,6 +272,8 @@
                             handlePause(config);
                         } else if (type === 'RESUME') {
                             handleResume();
+                        } else if (type === 'SET_VOLUME') {
+                            bgAudio.volume = volume;
                         }
                     };
 
@@ -414,8 +422,26 @@
                 div.style.fontSize = '10px';
                 div.style.color = '#555';
             }
-
+            
+            // Add step name overlay to mini canvas
+            const nameOverlay = document.createElement('div');
+            nameOverlay.textContent = step.name;
+            nameOverlay.style.position = 'absolute';
+            nameOverlay.style.bottom = '0';
+            nameOverlay.style.left = '0';
+            nameOverlay.style.width = '100%';
+            nameOverlay.style.background = 'rgba(0,0,0,0.6)';
+            nameOverlay.style.color = '#fff';
+            nameOverlay.style.fontSize = '10px';
+            nameOverlay.style.padding = '2px 4px';
+            nameOverlay.style.whiteSpace = 'nowrap';
+            nameOverlay.style.overflow = 'hidden';
+            nameOverlay.style.textOverflow = 'ellipsis';
+            nameOverlay.style.zIndex = '9999';
+            nameOverlay.style.textAlign = 'center';
+            
             canvas.appendChild(div);
+            canvas.appendChild(nameOverlay);
         });
         container.appendChild(canvas);
     }

@@ -94,6 +94,7 @@
 
         bindEvents();
         bindDragAndDropEvents();
+        updateResourceLists();
         
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
